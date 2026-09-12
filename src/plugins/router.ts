@@ -164,6 +164,14 @@ export const routes: RouteRecordRaw[] = [
           import(/* webpackChunkName: "discover" */ "@/views/HomeView.vue"),
       },
       {
+        path: "/listening-genome",
+        name: "listening-genome",
+        component: () =>
+          import(
+            /* webpackChunkName: "listening-genome" */ "@/views/ListeningGenomeView.vue"
+          ),
+      },
+      {
         path: "/ai-radio",
         name: "ai-radio",
         component: () =>

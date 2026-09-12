@@ -6,6 +6,7 @@ import {
   BookAudio,
   Compass,
   Disc3,
+  Dna,
   Droplet,
   Folder,
   ListMusic,
@@ -170,6 +171,14 @@ const MENU_ITEM_REGISTRY: MenuItemDefinition[] = [
     icon: GenreIcon,
     path: "/genres",
     isLibraryNode: true,
+    group: "library",
+  },
+  {
+    id: "listening_genome",
+    label: "listening_genome.title",
+    icon: Dna,
+    path: "/listening-genome",
+    isLibraryNode: false,
     group: "library",
   },
   {
