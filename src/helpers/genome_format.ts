@@ -1,4 +1,4 @@
-import type { GenreShare, RhythmCell } from "@/composables/genome/types";
+import type { RhythmCell } from "@/composables/genome/types";
 
 /**
  * Pure formatting helpers for the Listening Genome page (docs/ARCHITECTURE.md
@@ -21,86 +21,6 @@ export function formatRatio(ratio: number): string {
 /** Localized-agnostic thousands separator for raw play counts. */
 export function formatPlays(plays: number): string {
   return plays.toLocaleString("en-US");
-}
-
-/**
- * Cumulative SVG stroke-dashoffset arcs for the headline ring.
- *
- * Given genre shares (already sorted desc by the server) and a circle
- * circumference, returns one arc per genre: dash length is `share *
- * circumference`, offset is the cumulative sum of previous shares (so arcs
- * are drawn back-to-back starting at the 12 o'clock position when the SVG
- * itself is rotated -90deg).
- */
-export interface RingArc {
-  key: string;
-  label: string;
-  share: number;
-  dashArray: string;
-  dashOffset: number;
-  colorIndex: number; // 0-based, cycle through --chart-1..5
-}
-
-export function computeRingArcs(
-  genres: GenreShare[],
-  circumference: number,
-  maxArcs = 8,
-): RingArc[] {
-  const arcs: RingArc[] = [];
-  let cumulative = 0;
-  const shown = genres.slice(0, maxArcs);
-  shown.forEach((genre, index) => {
-    const length = genre.share * circumference;
-    arcs.push({
-      key: genre.key,
-      label: genre.label,
-      share: genre.share,
-      dashArray: `${length} ${circumference}`,
-      dashOffset: -cumulative,
-      colorIndex: index % 5,
-    });
-    cumulative += length;
-  });
-  return arcs;
-}
-
-/** Top N genres plus a synthetic "+N others" remainder bucket for the genre bar. */
-export interface GenreBarSegment {
-  key: string;
-  label: string;
-  share: number;
-  colorIndex: number;
-  isOthers: boolean;
-}
-
-export function genreBarSegments(
-  genres: GenreShare[],
-  topN = 3,
-): GenreBarSegment[] {
-  const top = genres.slice(0, topN).map((g, i) => ({
-    key: g.key,
-    label: g.label,
-    share: g.share,
-    colorIndex: i % 5,
-    isOthers: false,
-  }));
-  const rest = genres.slice(topN);
-  const othersShare = rest.reduce((sum, g) => sum + g.share, 0);
-  if (othersShare > 1e-6) {
-    top.push({
-      key: "__others__",
-      label: "",
-      share: othersShare,
-      colorIndex: topN % 5,
-      isOthers: true,
-    });
-  }
-  return top;
-}
-
-/** Number of non-others genres folded into "+N others". */
-export function othersCount(genres: GenreShare[], topN = 3): number {
-  return Math.max(0, genres.length - topN);
 }
 
 /**

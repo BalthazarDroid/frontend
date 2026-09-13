@@ -66,35 +66,30 @@
         </AlertDescription>
       </Alert>
 
-      <!-- Headline: divergence ring + genre bar -->
-      <Card>
-        <CardContent class="grid gap-6 py-6 md:grid-cols-[240px_1fr]">
-          <GenomeHeadlineRing
-            :divergence="genome.divergence"
-            :genres="genome.genres"
-          />
-          <div class="space-y-4">
-            <GenomeGenreBar :genres="genome.genres" />
-            <div
-              v-if="genome.divergence.top_over.length > 0"
-              class="flex flex-wrap gap-1.5"
-            >
-              <Badge
-                v-for="g in genome.divergence.top_over"
-                :key="g.key"
-                variant="secondary"
-              >
-                {{ g.label }}
-                {{
-                  $t("listening_genome.vs_average", {
-                    ratio: formatRatio(g.ratio),
-                  })
-                }}
-              </Badge>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <!-- Headline: the DNA molecule (bases + secondary genre rungs) -->
+      <GenomeMolecule
+        :genres="genome.genres"
+        :bases="genome.bases"
+        :total-listens="genome.stats.total_listens"
+      />
+
+      <div
+        v-if="genome.divergence.top_over.length > 0"
+        class="flex flex-wrap gap-1.5"
+      >
+        <Badge
+          v-for="g in genome.divergence.top_over"
+          :key="g.key"
+          variant="secondary"
+        >
+          {{ g.label }}
+          {{
+            $t("listening_genome.vs_average", {
+              ratio: formatRatio(g.ratio),
+            })
+          }}
+        </Badge>
+      </div>
 
       <GenomeStatTiles
         :obscurity="genome.obscurity"
@@ -132,11 +127,9 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import GenomeEmptyState from "@/components/genome/GenomeEmptyState.vue";
-import GenomeGenreBar from "@/components/genome/GenomeGenreBar.vue";
-import GenomeHeadlineRing from "@/components/genome/GenomeHeadlineRing.vue";
+import GenomeMolecule from "@/components/genome/GenomeMolecule.vue";
 import GenomePlayerSplit from "@/components/genome/GenomePlayerSplit.vue";
 import GenomeRhythmHeatmap from "@/components/genome/GenomeRhythmHeatmap.vue";
 import GenomeStatTiles from "@/components/genome/GenomeStatTiles.vue";
