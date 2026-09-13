@@ -686,7 +686,8 @@ const activeTab = computed(() => {
     name === "backgroundtasks" ||
     name === "diagnostics" ||
     name === "genremanagement" ||
-    name === "audioanalysissettings"
+    name === "audioanalysissettings" ||
+    name === "genomesettings"
   ) {
     return "system";
   }
@@ -892,6 +893,12 @@ const breadcrumbItems = computed(() => {
     .with("audioanalysissettings", () => {
       items.push({
         title: t("settings.audio_analysis"),
+        disabled: true,
+      });
+    })
+    .with("genomesettings", () => {
+      items.push({
+        title: t("listening_genome.settings.title"),
         disabled: true,
       });
     })

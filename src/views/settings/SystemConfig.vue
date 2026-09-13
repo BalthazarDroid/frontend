@@ -126,6 +126,7 @@ import Container from "@/components/Container.vue";
 import GenreIcon from "@/components/icons/GenreIcon.vue";
 import ListItem from "@/components/ListItem.vue";
 import ProviderIcon from "@/components/ProviderIcon.vue";
+import { Dna } from "@lucide/vue";
 import {
   Card,
   CardDescription,
@@ -197,6 +198,13 @@ const extraSystemEntries = computed<SystemConfigExtraEntry[]>(() =>
       icon: "mdi-waveform",
       route: "/settings/audio-analysis",
       minServerVersion: "2.9.0",
+    },
+    {
+      domain: "genome_import",
+      name: "listening_genome.settings.title",
+      description: "listening_genome.settings.import_hub_description",
+      icon: Dna,
+      route: "/settings/genome-import",
     },
   ].filter(
     (entry) =>

@@ -12,7 +12,7 @@
     <EmptyContent>
       <div class="flex flex-wrap justify-center gap-2">
         <Button as-child>
-          <RouterLink to="/settings/editcore/genome" class="no-underline">
+          <RouterLink to="/settings/genome-import" class="no-underline">
             {{ $t("listening_genome.empty_cta") }}
           </RouterLink>
         </Button>

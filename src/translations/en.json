@@ -2541,6 +2541,7 @@
         "empty_body": "Import your history or let Music Assistant collect plays for a few days.",
         "empty_cta": "Go to settings",
         "load_error": "Could not load the listening genome",
+        "open_settings": "Import history & settings",
         "rebuild": "Rebuild genome",
         "rebuild_success": "Genome rebuilt",
         "rebuild_error": "Could not rebuild the genome",
@@ -2553,6 +2554,7 @@
         "weekday_sun": "Sun",
         "settings": {
             "title": "Listening Genome",
+            "import_hub_description": "Import your Last.fm scrobble history or an Apple Music export.",
             "import_apple": "Import Apple Music export",
             "import_apple_hint": "Upload the Apple Music Play Activity.csv file from your privacy.apple.com data export.",
             "import_lastfm": "Import Last.fm history",

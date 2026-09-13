@@ -14,10 +14,27 @@
           {{ $t("listening_genome.subtitle") }}
         </p>
       </div>
-      <Button variant="outline" size="sm" :disabled="loading" @click="rebuild">
-        <RefreshCw class="size-4" :class="{ 'animate-spin': loading }" />
-        {{ $t("listening_genome.rebuild") }}
-      </Button>
+      <div class="flex items-center gap-2">
+        <Button as-child variant="ghost" size="icon">
+          <RouterLink
+            to="/settings/genome-import"
+            class="no-underline"
+            :aria-label="$t('listening_genome.open_settings')"
+            :title="$t('listening_genome.open_settings')"
+          >
+            <Settings class="size-4" />
+          </RouterLink>
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          :disabled="loading"
+          @click="rebuild"
+        >
+          <RefreshCw class="size-4" :class="{ 'animate-spin': loading }" />
+          {{ $t("listening_genome.rebuild") }}
+        </Button>
+      </div>
     </header>
 
     <template v-if="loading && !genome">
@@ -110,8 +127,9 @@ import GenomeTopLists from "@/components/genome/GenomeTopLists.vue";
 import { useGenome } from "@/composables/genome/useGenome";
 import { formatPlays, formatRatio } from "@/helpers/genome_format";
 import { $t } from "@/plugins/i18n";
-import { Dna, RefreshCw } from "@lucide/vue";
+import { Dna, RefreshCw, Settings } from "@lucide/vue";
 import { onMounted } from "vue";
+import { RouterLink } from "vue-router";
 
 const { genome, loading, load, rebuild } = useGenome();
 

@@ -523,6 +523,16 @@ export const routes: RouteRecordRaw[] = [
             meta: { requiresAdmin: true },
           },
           {
+            path: "genome-import",
+            name: "genomesettings",
+            component: () =>
+              import(
+                /* webpackChunkName: "genomesettings" */ "@/views/settings/GenomeSettings.vue"
+              ),
+            props: true,
+            meta: { requiresScope: Scope.LIBRARY_MANAGE },
+          },
+          {
             path: "remote-access",
             name: "remoteaccesssettings",
             component: () =>

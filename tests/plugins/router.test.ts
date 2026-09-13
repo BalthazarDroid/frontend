@@ -1,6 +1,7 @@
 import { DASHBOARD_VIEWER_PATH_STORAGE_KEY } from "@/helpers/guest_session";
 import { backFromMediaDetails } from "@/helpers/navigation";
 import { ConnectionState } from "@/plugins/api";
+import { Scope } from "@/plugins/api/interfaces";
 import { routes } from "@/plugins/router";
 import {
   NavigationFailureType,
@@ -506,6 +507,23 @@ describe("global navigation guard", () => {
 
     expect(pending.isSettled()).toBe(true);
     await expect(pending.result).resolves.toBeUndefined();
+  });
+});
+
+describe("genome settings route", () => {
+  // GenomeSettings.vue holds the only UI for triggering a Last.fm / Apple
+  // import; it must actually be reachable at a resolvable path, not just
+  // exist as an orphaned file.
+  it("resolves the genome import settings page", () => {
+    const route = resolveRoute("/settings/genome-import");
+
+    expect(route.name).toBe("genomesettings");
+  });
+
+  it("requires the library-manage scope", () => {
+    const record = findRouteRecord("genomesettings", routes);
+
+    expect(record?.meta?.requiresScope).toBe(Scope.LIBRARY_MANAGE);
   });
 });
 
