@@ -50,6 +50,22 @@
     </template>
 
     <template v-else-if="genome">
+      <!-- Genre resolution runs as a paced background pass against MusicBrainz. Until it
+           finishes, the genre breakdown - and therefore the divergence score - is provisional,
+           and saying so is more honest than showing a confident number built on partial data. -->
+      <Alert v-if="genome.stats.artists_pending > 0" variant="default">
+        <Loader2 class="size-4 animate-spin" />
+        <AlertTitle>{{ $t("listening_genome.enriching_title") }}</AlertTitle>
+        <AlertDescription>
+          {{
+            $t("listening_genome.enriching_body", {
+              pending: genome.stats.artists_pending,
+              resolved: genome.stats.artists_resolved,
+            })
+          }}
+        </AlertDescription>
+      </Alert>
+
       <!-- Headline: divergence ring + genre bar -->
       <Card>
         <CardContent class="grid gap-6 py-6 md:grid-cols-[240px_1fr]">
@@ -113,6 +129,7 @@
 </template>
 
 <script setup lang="ts">
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -127,7 +144,7 @@ import GenomeTopLists from "@/components/genome/GenomeTopLists.vue";
 import { useGenome } from "@/composables/genome/useGenome";
 import { formatPlays, formatRatio } from "@/helpers/genome_format";
 import { $t } from "@/plugins/i18n";
-import { Dna, RefreshCw, Settings } from "@lucide/vue";
+import { Dna, Loader2, RefreshCw, Settings } from "@lucide/vue";
 import { onMounted } from "vue";
 import { RouterLink } from "vue-router";
 

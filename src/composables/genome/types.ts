@@ -67,6 +67,11 @@ export interface GenomeStats {
   last_listen: number | null;
   coverage_by_source: Record<string, number>;
   enrichment_coverage: number;
+  // Artist genre resolution runs in a paced background pass against MusicBrainz, so a fresh
+  // import shows a genre breakdown (and therefore a divergence score) that is still firming
+  // up. Surfaced so the page can say so rather than presenting a provisional score as final.
+  artists_pending: number;
+  artists_resolved: number;
 }
 
 export interface DivergenceFacts {

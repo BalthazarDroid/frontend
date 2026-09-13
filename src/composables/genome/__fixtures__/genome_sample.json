@@ -18,7 +18,9 @@
       "apple_export": 1340,
       "lastfm": 228
     },
-    "enrichment_coverage": 0.91
+    "enrichment_coverage": 0.91,
+    "artists_pending": 137,
+    "artists_resolved": 812
   },
   "genres": [
     {
