@@ -2576,6 +2576,27 @@
       "import_error": "Import failed"
     },
     "enriching_title": "Genres still resolving",
-    "enriching_body": "{resolved} artists resolved, {pending} still to go. The genre mix and divergence score will keep firming up as this finishes in the background."
+    "enriching_body": "{resolved} artists resolved, {pending} still to go. The genre mix and divergence score will keep firming up as this finishes in the background.",
+    "molecule": {
+      "title": "Genome — molecular plate",
+      "subtitle": "Backbone carries a blend of your top genres; each rung is a secondary genre.",
+      "svg_aria": "Genome molecule: a DNA-shaped plot of your top genres and their secondary genre pairs",
+      "hint": "Hover or focus any base pair or backbone strand.",
+      "bases_heading": "Base pairs",
+      "bases_subtitle": "Your top genres.",
+      "no_bases": "Not enough resolved listening yet to identify your top genres.",
+      "backbone_explainer": "The backbone blends every base — it is the library itself. Each rung is a secondary genre coloured by how much of it lives in each pillar.",
+      "backbone_label": "Backbone",
+      "backbone_desc": "All {plays} listens · the library itself",
+      "backbone_desc_empty": "Not enough resolved listening yet to blend a backbone.",
+      "share_of_listening": "{percent} of listening · {plays} plays",
+      "mix_unknown": "Genre mix not yet known — still resolving.",
+      "status_overexpressed": "Overexpressed",
+      "status_stable": "Stable",
+      "status_underexpressed": "Underexpressed",
+      "rung_aria": "{label}, {percent} of listening, {status}",
+      "leg_aria": "Backbone strand, blend of {count} base genres",
+      "leg_aria_empty": "Backbone strand, not enough data yet to blend"
+    }
   }
 }
