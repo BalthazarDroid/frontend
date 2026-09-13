@@ -325,11 +325,18 @@ interface Geometry {
 }
 const GEOM = geometry as Geometry;
 
-const props = defineProps<{
-  genres: GenreShare[];
-  bases: GenreShare[];
-  totalListens: number;
-}>();
+// Defaulted rather than required: a genome served from a cache written by an older
+// result shape can arrive without `bases`, and a component that throws on a missing
+// field takes its whole card down with it (silently - nothing reaches the server log).
+// Degrading to the no-bases state is the honest failure here.
+const props = withDefaults(
+  defineProps<{
+    genres?: GenreShare[];
+    bases?: GenreShare[];
+    totalListens?: number;
+  }>(),
+  { genres: () => [], bases: () => [], totalListens: 0 },
+);
 
 // Fixed hues for up to 4 bases - a purely presentational palette, not tied to
 // genre identity, so it's stable regardless of which genres occupy the slots.
@@ -338,6 +345,12 @@ function baseColor(index: number, lightness = 60, saturation = 80): string {
   return `hsl(${HUES[index % HUES.length]} ${saturation}% ${lightness}%)`;
 }
 const neutralColor = "hsl(220 6% 52%)";
+
+// `base_mix` is [] when cross-genre affinity isn't computable, and absent entirely on a
+// payload from an older result schema. Both mean the same thing to the visual.
+function baseMix(genre: GenreShare): number[] {
+  return genre.base_mix ?? [];
+}
 
 const bases = computed(() => props.bases);
 const hasBases = computed(() => bases.value.length > 0);
@@ -362,11 +375,11 @@ const tintedRungs = computed<TintedRung[]>(() => {
   const out: TintedRung[] = [];
   for (const rung of GEOM.rungs) {
     const genre = pairs.value.get(rung.i);
-    if (!genre || genre.base_mix.length === 0) continue;
+    if (!genre || baseMix(genre).length === 0) continue;
     out.push({
       ...rung,
       genre,
-      stops: mixGradientStops(genre.base_mix, (i) => baseColor(i, 60)),
+      stops: mixGradientStops(baseMix(genre), (i) => baseColor(i, 60)),
     });
   }
   return out;
@@ -505,7 +518,8 @@ const hudInfo = computed<HudInfo | null>(() => {
   if (!rung || !rung.genre) return null;
   const genre = rung.genre;
   const rank = secondaryRank.value.get(genre.key) ?? 0;
-  const mixKnown = genre.base_mix.length > 0;
+  const mix = baseMix(genre);
+  const mixKnown = mix.length > 0;
   return {
     code: secondaryCode(rank),
     title: genre.label,
@@ -513,7 +527,7 @@ const hudInfo = computed<HudInfo | null>(() => {
       percent: formatPercent(genre.share),
       plays: formatPlays(estimatePlays(genre.share, props.totalListens)),
     }),
-    mix: genre.base_mix,
+    mix,
     mixLabels: bases.value.map((b) => b.label),
     mixKnown,
     status: statusForRatio(genre.ratio),

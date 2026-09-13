@@ -18,7 +18,8 @@ export interface GenreShare {
   // summing to 1.0 - or [] when it can't be honestly computed (common before
   // enrichment finishes) or on a base genre's own row (a base's affinity to
   // itself isn't a figure the DNA visual needs). Never a fabricated 1/n split.
-  base_mix: number[];
+  /** Absent on a payload from an older result schema; [] when not computable. */
+  base_mix?: number[];
 }
 
 export interface ArtistFact {
