@@ -14,6 +14,11 @@ export interface GenreShare {
   baseline_share: number;
   ratio: number;
   contribution: number;
+  // Affinity to each `GenomeResult.bases` entry, same length/order as `bases`,
+  // summing to 1.0 - or [] when it can't be honestly computed (common before
+  // enrichment finishes) or on a base genre's own row (a base's affinity to
+  // itself isn't a figure the DNA visual needs). Never a fabricated 1/n split.
+  base_mix: number[];
 }
 
 export interface ArtistFact {
@@ -113,6 +118,9 @@ export interface GenomeResult {
   half_life_days: number;
   stats: GenomeStats;
   genres: GenreShare[];
+  // Top 4 entries of `genres` by share, in order - 0-4 entries, never padded.
+  // The DNA visual's four "bases"; see docs/ARCHITECTURE.md §3.4 "Four bases".
+  bases: GenreShare[];
   divergence: DivergenceFacts;
   obscurity: ObscurityFacts;
   era: EraFacts;
