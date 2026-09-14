@@ -10,178 +10,187 @@
         {{ $t("listening_genome.molecule.subtitle") }}
       </CardDescription>
     </CardHeader>
-    <CardContent class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_260px]">
-      <div class="flex flex-col items-center gap-2">
+    <CardContent>
+      <!-- container-type makes the layout respond to the CARD's width, not the
+           viewport's - the page has a sidebar, so those are not the same number. -->
+      <div class="genome-shell">
         <div class="genome-stage">
-          <img
-            :src="plateSrc"
-            alt=""
-            aria-hidden="true"
-            class="genome-stage__img"
-          />
-          <svg
-            class="genome-stage__svg"
-            :viewBox="`0 0 ${GEOM.w} ${GEOM.h}`"
-            role="group"
-            :aria-label="$t('listening_genome.molecule.svg_aria')"
-          >
-            <defs>
-              <linearGradient
-                id="genome-backbone-gradient"
-                gradientUnits="userSpaceOnUse"
-                :x1="0"
-                :y1="GEOM.h"
-                :x2="0"
-                :y2="0"
-              >
-                <stop
-                  v-for="stop in backboneStops"
-                  :key="stop.offsetPercent"
-                  :offset="`${stop.offsetPercent}%`"
-                  :stop-color="stop.color"
-                />
-              </linearGradient>
-              <linearGradient
-                v-for="rung in tintedRungs"
-                :id="`genome-rung-gradient-${rung.i}`"
-                :key="`grad-${rung.i}`"
-                gradientUnits="userSpaceOnUse"
-                :x1="Math.min(rung.x1, rung.x2)"
-                :y1="(rung.y1 + rung.y2) / 2"
-                :x2="Math.max(rung.x1, rung.x2)"
-                :y2="(rung.y1 + rung.y2) / 2"
-              >
-                <stop
-                  v-for="stop in rung.stops"
-                  :key="stop.offsetPercent"
-                  :offset="`${stop.offsetPercent}%`"
-                  :stop-color="stop.color"
-                />
-              </linearGradient>
-            </defs>
-
-            <!-- backbone strands: a blend of every base, the library as a whole -->
-            <polyline
-              v-for="leg in legPaths"
-              :key="`leg-visual-${leg.key}`"
-              class="genome-tint"
-              :points="leg.points"
-              fill="none"
-              :stroke="
-                hasBases ? 'url(#genome-backbone-gradient)' : neutralColor
-              "
-              stroke-width="15"
-              stroke-linecap="round"
-              :opacity="leg.key === active?.legKey ? 0.8 : 0.34"
-              :style="{
-                strokeWidth: leg.key === active?.legKey ? '18px' : '15px',
-              }"
+          <div class="genome-plate">
+            <img
+              :src="plateSrc"
+              alt=""
+              aria-hidden="true"
+              class="genome-plate__img"
             />
+            <svg
+              class="genome-plate__svg"
+              :viewBox="`0 0 ${GEOM.w} ${GEOM.h}`"
+              role="group"
+              :aria-label="$t('listening_genome.molecule.svg_aria')"
+            >
+              <defs>
+                <linearGradient
+                  id="genome-backbone-gradient"
+                  gradientUnits="userSpaceOnUse"
+                  :x1="0"
+                  :y1="GEOM.h"
+                  :x2="0"
+                  :y2="0"
+                >
+                  <stop
+                    v-for="stop in backboneStops"
+                    :key="stop.offsetPercent"
+                    :offset="`${stop.offsetPercent}%`"
+                    :stop-color="stop.color"
+                  />
+                </linearGradient>
+                <linearGradient
+                  v-for="rung in tintedRungs"
+                  :id="`genome-rung-gradient-${rung.i}`"
+                  :key="`grad-${rung.i}`"
+                  gradientUnits="userSpaceOnUse"
+                  :x1="Math.min(rung.x1, rung.x2)"
+                  :y1="(rung.y1 + rung.y2) / 2"
+                  :x2="Math.max(rung.x1, rung.x2)"
+                  :y2="(rung.y1 + rung.y2) / 2"
+                >
+                  <stop
+                    v-for="stop in rung.stops"
+                    :key="stop.offsetPercent"
+                    :offset="`${stop.offsetPercent}%`"
+                    :stop-color="stop.color"
+                  />
+                </linearGradient>
+              </defs>
 
-            <!-- secondary genre rungs -->
-            <line
-              v-for="rung in allRungs"
-              :key="`rung-visual-${rung.i}`"
-              class="genome-tint"
-              :x1="rung.x1"
-              :y1="rung.y1"
-              :x2="rung.x2"
-              :y2="rung.y2"
-              :stroke="rung.strokeColor"
-              stroke-width="9"
-              stroke-linecap="round"
-              :opacity="rung.opacity"
-              :style="{
-                strokeWidth: active?.rungIndex === rung.i ? '12px' : '9px',
-              }"
-            />
+              <!-- backbone strands: a blend of every base, the library as a whole -->
+              <polyline
+                v-for="leg in legPaths"
+                :key="`leg-visual-${leg.key}`"
+                class="genome-tint"
+                :points="leg.points"
+                fill="none"
+                :stroke="
+                  hasBases ? 'url(#genome-backbone-gradient)' : neutralColor
+                "
+                stroke-width="15"
+                stroke-linecap="round"
+                :opacity="leg.key === active?.legKey ? 0.8 : 0.34"
+                :style="{
+                  strokeWidth: leg.key === active?.legKey ? '18px' : '15px',
+                }"
+              />
 
-            <!-- reticle + leader line, shown while something is active -->
-            <g v-if="reticle" class="genome-reticle">
-              <circle
-                :cx="reticle.x"
-                :cy="reticle.y"
-                r="13"
-                fill="none"
-                stroke="#fff"
-                stroke-width="1.1"
-                opacity=".85"
-              />
-              <circle
-                :cx="reticle.x"
-                :cy="reticle.y"
-                r="6"
-                fill="none"
-                stroke="#fff"
-                stroke-width="1.1"
-                opacity=".95"
-              />
-              <circle :cx="reticle.x" :cy="reticle.y" r="1.8" fill="#fff" />
+              <!-- secondary genre rungs -->
               <line
-                :x1="reticle.x + 13"
-                :y1="reticle.y"
-                :x2="hudAnchor.x"
-                :y2="hudAnchor.y + 30"
-                stroke="#fff"
-                stroke-width="1"
-                opacity=".55"
+                v-for="rung in allRungs"
+                :key="`rung-visual-${rung.i}`"
+                class="genome-tint"
+                :x1="rung.x1"
+                :y1="rung.y1"
+                :x2="rung.x2"
+                :y2="rung.y2"
+                :stroke="rung.strokeColor"
+                stroke-width="9"
+                stroke-linecap="round"
+                :opacity="rung.opacity"
+                :style="{
+                  strokeWidth: active?.rungIndex === rung.i ? '12px' : '9px',
+                }"
               />
-            </g>
 
-            <!-- hit targets: one focusable, hoverable element per interactive
+              <!-- reticle + leader line, shown while something is active -->
+              <g v-if="reticle" class="genome-reticle">
+                <circle
+                  :cx="reticle.x"
+                  :cy="reticle.y"
+                  r="13"
+                  fill="none"
+                  stroke="#fff"
+                  stroke-width="1.1"
+                  opacity=".85"
+                />
+                <circle
+                  :cx="reticle.x"
+                  :cy="reticle.y"
+                  r="6"
+                  fill="none"
+                  stroke="#fff"
+                  stroke-width="1.1"
+                  opacity=".95"
+                />
+                <circle :cx="reticle.x" :cy="reticle.y" r="1.8" fill="#fff" />
+                <line
+                  class="genome-leader"
+                  :x1="reticle.x + 13"
+                  :y1="reticle.y"
+                  :x2="hudAnchor.x"
+                  :y2="hudAnchor.y + 24"
+                  stroke="#fff"
+                  stroke-width="1"
+                  opacity=".55"
+                />
+              </g>
+
+              <!-- hit targets: one focusable, hoverable element per interactive
                  rung/leg. Rungs with no paired genre (more rungs than
                  genres) intentionally get no hit target: untinted and
                  non-interactive, per the pairing rule. -->
-            <line
-              v-for="leg in legPaths"
-              :key="`leg-hit-${leg.key}`"
-              class="genome-hit"
-              :x1="leg.hitX1"
-              :y1="leg.hitY1"
-              :x2="leg.hitX2"
-              :y2="leg.hitY2"
-              stroke="transparent"
-              stroke-width="26"
-              stroke-linecap="round"
-              tabindex="0"
-              role="button"
-              :aria-label="legAriaLabel"
-              @mouseenter="setHover({ legKey: leg.key })"
-              @mouseleave="clearHover"
-              @focus="setHover({ legKey: leg.key })"
-              @blur="clearHover"
-              @click="togglePin({ legKey: leg.key })"
-              @keydown.enter.prevent="togglePin({ legKey: leg.key })"
-              @keydown.space.prevent="togglePin({ legKey: leg.key })"
-            />
-            <line
-              v-for="rung in interactiveRungs"
-              :key="`rung-hit-${rung.i}`"
-              class="genome-hit"
-              :x1="rung.x1"
-              :y1="rung.y1"
-              :x2="rung.x2"
-              :y2="rung.y2"
-              stroke="transparent"
-              stroke-width="20"
-              stroke-linecap="round"
-              tabindex="0"
-              role="button"
-              :aria-label="rungAriaLabel(rung.genre)"
-              @mouseenter="setHover({ rungIndex: rung.i })"
-              @mouseleave="clearHover"
-              @focus="setHover({ rungIndex: rung.i })"
-              @blur="clearHover"
-              @click="togglePin({ rungIndex: rung.i })"
-              @keydown.enter.prevent="togglePin({ rungIndex: rung.i })"
-              @keydown.space.prevent="togglePin({ rungIndex: rung.i })"
-            />
-          </svg>
+              <line
+                v-for="leg in legPaths"
+                :key="`leg-hit-${leg.key}`"
+                class="genome-hit"
+                :x1="leg.hitX1"
+                :y1="leg.hitY1"
+                :x2="leg.hitX2"
+                :y2="leg.hitY2"
+                stroke="transparent"
+                stroke-width="26"
+                stroke-linecap="round"
+                tabindex="0"
+                role="button"
+                :aria-label="legAriaLabel"
+                @mouseenter="setHover({ legKey: leg.key })"
+                @mouseleave="clearHover"
+                @focus="setHover({ legKey: leg.key })"
+                @blur="clearHover"
+                @click="togglePin({ legKey: leg.key })"
+                @keydown.enter.prevent="togglePin({ legKey: leg.key })"
+                @keydown.space.prevent="togglePin({ legKey: leg.key })"
+              />
+              <line
+                v-for="rung in interactiveRungs"
+                :key="`rung-hit-${rung.i}`"
+                class="genome-hit"
+                :x1="rung.x1"
+                :y1="rung.y1"
+                :x2="rung.x2"
+                :y2="rung.y2"
+                stroke="transparent"
+                stroke-width="20"
+                stroke-linecap="round"
+                tabindex="0"
+                role="button"
+                :aria-label="rungAriaLabel(rung.genre)"
+                @mouseenter="setHover({ rungIndex: rung.i })"
+                @mouseleave="clearHover"
+                @focus="setHover({ rungIndex: rung.i })"
+                @blur="clearHover"
+                @click="togglePin({ rungIndex: rung.i })"
+                @keydown.enter.prevent="togglePin({ rungIndex: rung.i })"
+                @keydown.space.prevent="togglePin({ rungIndex: rung.i })"
+              />
+            </svg>
+          </div>
 
+          <!-- The callout lives in the stage, not the plate: on a wide card it sits in
+             its own lane beside the molecule (the leader line runs out of the SVG,
+             which is why that element keeps overflow: visible), and only overlays the
+             molecule when the card is too narrow to give it a lane of its own. -->
           <div
             v-if="hudInfo"
             class="genome-hud on"
-            :style="{ left: `${hudLeftPercent}%`, top: `${hudTopPercent}%` }"
+            :style="hudStyle"
             aria-hidden="true"
           >
             <div class="genome-hud__code">{{ hudInfo.code }}</div>
@@ -228,47 +237,50 @@
               </div>
             </div>
           </div>
-        </div>
-        <p class="text-xs text-muted-foreground">
-          {{ $t("listening_genome.molecule.hint") }}
-        </p>
-      </div>
 
-      <div>
-        <h3 class="text-xs uppercase tracking-widest text-muted-foreground">
-          {{ $t("listening_genome.molecule.bases_heading") }}
-        </h3>
-        <p class="mt-0.5 text-xs text-muted-foreground">
-          {{ $t("listening_genome.molecule.bases_subtitle") }}
-        </p>
+          <div class="genome-panel">
+            <h3 class="genome-panel__heading">
+              {{ $t("listening_genome.molecule.bases_heading") }}
+            </h3>
+            <p class="genome-panel__sub">
+              {{ $t("listening_genome.molecule.bases_subtitle") }}
+            </p>
 
-        <p v-if="bases.length === 0" class="mt-4 text-sm text-muted-foreground">
-          {{ $t("listening_genome.molecule.no_bases") }}
-        </p>
-        <div v-else class="mt-2">
-          <div
-            v-for="(base, i) in bases"
-            :key="base.key"
-            class="genome-baserow"
-          >
-            <div class="flex items-center gap-2.5">
-              <span
-                class="genome-baserow__dot"
-                :style="{ background: baseColor(i) }"
-              ></span>
-              <div>
-                <div class="text-sm">{{ base.label }}</div>
-                <div class="genome-baserow__code">{{ baseCode(base.key) }}</div>
+            <p v-if="bases.length === 0" class="genome-panel__empty">
+              {{ $t("listening_genome.molecule.no_bases") }}
+            </p>
+            <div v-else class="genome-panel__rows">
+              <div
+                v-for="(base, i) in bases"
+                :key="base.key"
+                class="genome-baserow"
+              >
+                <div class="genome-baserow__id">
+                  <span
+                    class="genome-baserow__dot"
+                    :style="{ background: baseColor(i) }"
+                  ></span>
+                  <div>
+                    <div class="genome-baserow__label">{{ base.label }}</div>
+                    <div class="genome-baserow__code">
+                      {{ baseCode(base.key) }}
+                    </div>
+                  </div>
+                </div>
+                <div class="genome-baserow__share">
+                  {{ formatPercent(base.share) }}
+                </div>
               </div>
             </div>
-            <div class="text-sm font-semibold tabular-nums">
-              {{ formatPercent(base.share) }}
-            </div>
+
+            <p class="genome-panel__foot">
+              {{ $t("listening_genome.molecule.backbone_explainer") }}
+            </p>
           </div>
         </div>
 
-        <p class="mt-3.5 text-xs text-muted-foreground">
-          {{ $t("listening_genome.molecule.backbone_explainer") }}
+        <p class="genome-hint">
+          {{ $t("listening_genome.molecule.hint") }}
         </p>
       </div>
     </CardContent>
@@ -537,11 +549,15 @@ const hudInfo = computed<HudInfo | null>(() => {
 
 const reticle = computed(() => (hudInfo.value ? hudInfo.value.anchor : null));
 
-// The panel's own footprint as a percentage of the stage, matching its CSS
-// width (see .genome-hud) - kept in percentage terms throughout, rather than
-// the mockup's fixed-pixel clamp, because the stage itself scales with the
-// viewport (viewBox, not a fixed 540px canvas). When there isn't room to the
-// right of the reticle, the panel flips to its left instead of overflowing.
+// Two placements, chosen in CSS rather than by measuring anything in JS.
+//
+// Wide: the callout gets its own lane to the right of the plate. The plate's width is
+// derivable from the stage height alone (its aspect ratio is fixed), so the lane's left
+// edge is a pure calc() - no ResizeObserver, no layout read.
+//
+// Narrow (the `--narrow` rules below): there is no room for a lane, so the callout
+// overlays the plate exactly as it used to, flipping to the reticle's left when it would
+// otherwise run off the right edge.
 const PANEL_WIDTH_PCT = 46;
 const GAP_PCT = 5;
 
@@ -557,11 +573,25 @@ const hudTopPercent = computed(() => {
   const ry = (reticle.value.y / GEOM.h) * 100;
   return Math.max(1, ry - 5);
 });
-// Leader-line endpoint, converted back to SVG-space so it lines up with the
-// (percentage-positioned) panel regardless of how large the stage renders.
+
+// The callout's vertical position as a fraction of the plate's height, nudged up so the
+// panel's title sits level with the reticle rather than below it.
+const hudTopFraction = computed(() =>
+  reticle.value ? Math.max(0.01, reticle.value.y / GEOM.h - 0.06) : 0,
+);
+
+const hudStyle = computed(() => ({
+  "--hud-left-pct": `${hudLeftPercent.value}%`,
+  "--hud-top-pct": `${hudTopPercent.value}%`,
+  "--hud-top-fr": `${hudTopFraction.value}`,
+}));
+
+// Leader-line endpoint. In the wide layout the callout is outside the plate entirely, so
+// the line simply runs to the plate's edge and the panel picks it up from there; the SVG
+// keeps overflow: visible so the last few pixels are not clipped.
 const hudAnchor = computed(() => ({
-  x: (hudLeftPercent.value / 100) * GEOM.w,
-  y: (hudTopPercent.value / 100) * GEOM.h,
+  x: GEOM.w + 12,
+  y: hudTopFraction.value * GEOM.h,
 }));
 
 const hudBarGradient = computed(() => {
@@ -614,25 +644,87 @@ const legAriaLabel = computed(() =>
 </script>
 
 <style scoped>
+.genome-shell {
+  container-type: inline-size;
+}
+.genome-hint {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+/* One dark panel spanning the card. The plate, the callout and the base-pair list all
+   live inside it, so the space to the right of the molecule is used rather than left
+   as an empty margin with content stranded outside the box. */
 .genome-stage {
+  /* cqi, not vw: the plate should scale with the CARD, which is what the container
+     query above establishes - the page has a sidebar, so vw would undersize it. */
+  --stage-h: clamp(380px, 62cqi, 660px);
+  /* The plate's aspect ratio is fixed (540x700), so its rendered width follows from the
+     stage height - which is what lets the callout's lane be a plain calc(). */
+  --plate-w: calc(var(--stage-h) * 540 / 700);
+  --stage-pad: 18px;
+  --panel-w: clamp(170px, 22cqi, 240px);
   position: relative;
-  width: 100%;
-  max-width: 420px;
-  aspect-ratio: 540 / 700;
+  display: flex;
+  align-items: stretch;
+  gap: 20px;
+  height: var(--stage-h);
+  padding: var(--stage-pad);
   border-radius: 12px;
-  overflow: hidden;
+  /* The plate is white particles on nothing, so the panel carries its own dark ground
+     rather than inheriting the theme's. */
   background: #07080a;
 }
-.genome-stage__img,
-.genome-stage__svg {
+.genome-plate {
+  position: relative;
+  flex: 0 0 auto;
+  height: 100%;
+  aspect-ratio: 540 / 700;
+}
+.genome-plate__img,
+.genome-plate__svg {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
 }
-.genome-stage__svg {
+.genome-plate__svg {
   overflow: visible;
 }
+
+.genome-panel {
+  flex: 0 0 var(--panel-w);
+  margin-left: auto;
+  align-self: flex-start;
+  padding: 14px 15px 13px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+.genome-panel__heading {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #8f939d;
+}
+.genome-panel__sub {
+  margin-top: 2px;
+  font-size: 11px;
+  color: #71757e;
+}
+.genome-panel__rows {
+  margin-top: 8px;
+}
+.genome-panel__empty,
+.genome-panel__foot {
+  margin-top: 12px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #71757e;
+}
+
 .genome-tint {
   transition:
     opacity 0.16s ease,
@@ -654,12 +746,19 @@ const legAriaLabel = computed(() =>
   position: absolute;
   pointer-events: none;
   z-index: 8;
-  /* Must match PANEL_WIDTH_PCT in the script, which uses this figure to
-     decide whether the panel flips to the reticle's left instead of
-     overflowing the stage on its right. */
-  width: 46%;
-  min-width: 150px;
+  /* Wide layout: its own lane between the plate and the base-pair panel, tracking the
+     reticle vertically. Bounding it on BOTH sides is what keeps it from sliding under
+     the panel as the card narrows - a fixed width could not know where the lane ends. */
+  left: calc(var(--stage-pad) + var(--plate-w) + 20px);
+  right: calc(var(--stage-pad) + var(--panel-w) + 20px);
+  width: auto;
+  max-width: 320px;
+  top: min(
+    calc(var(--stage-pad) + var(--hud-top-fr) * var(--stage-h)),
+    calc(100% - 230px)
+  );
 }
+
 .genome-hud__code {
   display: inline-block;
   margin-bottom: -1px;
@@ -756,16 +855,36 @@ const legAriaLabel = computed(() =>
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--border);
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 .genome-baserow:last-of-type {
   border-bottom: 0;
 }
+.genome-baserow__id {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.genome-baserow__label {
+  font-size: 12.5px;
+  color: #e7e9ee;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.genome-baserow__share {
+  font-size: 12.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+}
 .genome-baserow__dot {
   display: inline-block;
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -775,8 +894,46 @@ const legAriaLabel = computed(() =>
     Menlo,
     monospace;
   letter-spacing: 0.14em;
-  color: var(--muted-foreground);
+  color: #71757e;
   text-transform: uppercase;
   margin-top: 2px;
+}
+
+/* Narrow: no room for a callout lane, so the stage stacks and the callout goes back to
+   overlaying the plate, flipping sides when it would run off the right edge. */
+/* Narrow: no room for a callout lane. The stage stacks, and the callout stops floating
+   entirely - it becomes a block under the molecule. Overlaying it on a small plate hid
+   the thing it was describing, and chasing the reticle horizontally inside a centred,
+   max-width plate is arithmetic with no payoff. The reticle still marks the spot. */
+@container (max-width: 760px) {
+  .genome-stage {
+    --stage-h: auto;
+    flex-direction: column;
+    align-items: center;
+    height: auto;
+  }
+  .genome-plate {
+    order: 1;
+    width: 100%;
+    max-width: 420px;
+    height: auto;
+  }
+  .genome-hud {
+    order: 2;
+    position: static;
+    width: 100%;
+    max-width: 420px;
+    right: auto;
+  }
+  .genome-panel {
+    order: 3;
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 420px;
+    margin-left: 0;
+  }
+  .genome-leader {
+    display: none;
+  }
 }
 </style>
