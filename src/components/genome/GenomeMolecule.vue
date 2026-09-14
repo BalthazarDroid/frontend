@@ -98,6 +98,36 @@
                 </mask>
               </defs>
 
+              <g
+                class="genome-halo"
+                mask="url(#genome-particle-mask)"
+                filter="url(#genome-active-glow)"
+              >
+                <polyline
+                  v-for="leg in legPaths"
+                  :key="`leg-halo-${leg.key}`"
+                  :points="leg.points"
+                  fill="none"
+                  :stroke="
+                    hasBases ? 'url(#genome-backbone-gradient)' : neutralColor
+                  "
+                  stroke-width="17"
+                  stroke-linecap="round"
+                />
+                <line
+                  v-for="rung in interactiveRungs"
+                  :key="`rung-halo-${rung.i}`"
+                  :x1="rung.x1"
+                  :y1="rung.y1"
+                  :x2="rung.x2"
+                  :y2="rung.y2"
+                  :stroke="rung.strokeColor"
+                  stroke-width="10"
+                  stroke-linecap="round"
+                  :opacity="rung.opacity"
+                />
+              </g>
+
               <g mask="url(#genome-particle-mask)">
                 <!-- backbone strands: a blend of every base, the library as a whole -->
                 <polyline
@@ -863,6 +893,11 @@ const legAriaLabel = computed(() =>
     opacity 0.16s ease,
     stroke-width 0.16s ease;
 }
+.genome-halo {
+  mix-blend-mode: screen;
+  opacity: 0.5;
+  pointer-events: none;
+}
 .genome-glow {
   mix-blend-mode: screen;
   opacity: 0.85;
@@ -871,7 +906,7 @@ const legAriaLabel = computed(() =>
 .genome-plate__img {
   /* Dimmed, because it is the unlit state. The tinted particles sit directly on top of
      these same specks, so a bright base underneath would wash every colour out. */
-  opacity: 0.62;
+  opacity: 0.92;
 }
 .genome-hit {
   cursor: pointer;

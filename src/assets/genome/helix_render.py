@@ -52,8 +52,8 @@ def splat(xs,ys,zs,sizes,gains):
 # Bubbles, not dust. The count is low and the radii are large and widely varied, and -
 # the part that actually matters - there are far fewer positions ALONG the path. A dense
 # chain of big blobs merges back into a tube however few you put at each step.
-PER_STEP, STEPS = 4, 190
-JITTER = 1.9
+PER_STEP, STEPS = 3, 150
+JITTER = 2.1
 for i in range(STEPS):
     t=i/STEPS
     for strand,(p) in enumerate(helix(t)):
@@ -63,8 +63,8 @@ for i in range(STEPS):
         nc=PER_STEP
         jx=rng.normal(0,JITTER*SS,nc); jy=rng.normal(0,JITTER*SS,nc)
         splat(p[0]+jx, p[1]+jy, [p[2]]*nc,
-              rng.uniform(1.8,4.6,nc)*SS*(0.6+0.5*depth),
-              rng.uniform(0.5,1.5,nc)*(0.45+0.95*depth))
+              rng.uniform(1.4,3.8,nc)*SS*(0.6+0.5*depth),
+              rng.uniform(0.5,1.5,nc)*(0.20+1.15*depth))
         nh=int(PER_STEP*0.6)
         hx=rng.normal(0,4.6*SS,nh); hy=rng.normal(0,4.6*SS,nh)
         far=rng.random(nh)<0.12; hx[far]*=2.6; hy[far]*=2.6
@@ -78,13 +78,13 @@ for k in range(NRUNGS):
     t=(k+0.5)/NRUNGS
     a,b=helix(t)
     L=math.hypot(a[0]-b[0],a[1]-b[1])
-    n=max(30,int(L*0.30))
+    n=max(18,int(L*0.22))
     f=rng.random(n)
     px=a[0]+(b[0]-a[0])*f; py=a[1]+(b[1]-a[1])*f; pz=a[2]+(b[2]-a[2])*f
     px=px+rng.normal(0,1.35*SS,n); py=py+rng.normal(0,1.35*SS,n)
     depth=(pz/RAD+1)/2
-    splat(px,py,pz,rng.uniform(1.8,4.6,n)*SS*(0.55+0.5*depth),
-          rng.uniform(0.5,1.5,n)*(0.40+0.90*depth))
+    splat(px,py,pz,rng.uniform(1.4,3.8,n)*SS*(0.55+0.5*depth),
+          rng.uniform(0.5,1.5,n)*(0.20+1.15*depth))
     rungs.append({"i":k,"t":t,"x1":a[0]/SS,"y1":a[1]/SS,"x2":b[0]/SS,"y2":b[1]/SS,
                   "len":L/SS,"face":abs(math.cos(-0.45+2*math.pi*TURNS*t))})
 
@@ -94,14 +94,18 @@ lum=1-np.exp(-lum*0.58)                      # soft rolloff keeps highlights fro
 img8=(np.clip(lum,0,1)*255).astype(np.uint8)
 base=Image.fromarray(img8,"L")
 glow=base.filter(ImageFilter.GaussianBlur(7*SS/2))
-merged=np.maximum(np.asarray(base,np.float32), np.asarray(glow,np.float32)*0.30)
+merged=np.maximum(np.asarray(base,np.float32), np.asarray(glow,np.float32)*0.22)
 merged=np.clip(merged,0,255).astype(np.uint8)
 L=Image.fromarray(merged,"L").resize((W,H),Image.LANCZOS)
 arr=np.asarray(L,np.float32)/255.0
 # very slightly cool white, like the reference's silver dust
 rgb=np.stack([arr*0.95, arr*0.97, arr*1.0],-1)
 out=Image.fromarray((np.clip(rgb,0,1)*255).astype(np.uint8),"RGB")
-out.putalpha(Image.fromarray((np.clip(arr*1.25,0,1)*255).astype(np.uint8),"L"))
+# The alpha is capped below 1.0 on purpose. This PNG is used as a MASK over the colour
+# layer, so a particle reaching full alpha produces a fully OPAQUE coloured bubble - the
+# thing that read as "solid". Capping it is what makes the bubbles translucent; the
+# see-through quality of the structure comes from the low particle count above.
+out.putalpha(Image.fromarray((np.clip(arr*0.90,0,1)*255).astype(np.uint8),"L"))
 out.save("helix.png")
 
 # ---- callout bar texture -----------------------------------------------------
