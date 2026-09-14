@@ -135,7 +135,6 @@ export interface GenomeResult {
 export interface GenomeRebuildResult {
   listener: string;
   listens_scanned: number;
-  artists_enriched: number;
   duration_ms: number;
   genome: GenomeResult;
 }
