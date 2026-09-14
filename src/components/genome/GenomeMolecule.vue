@@ -16,6 +16,8 @@
       <div class="genome-shell">
         <div class="genome-stage">
           <div class="genome-plate">
+            <!-- The unlit dust. Every particle that no genre claims stays this
+                 colourless grey; the tinted layer above lights the rest. -->
             <img
               :src="plateSrc"
               alt=""
@@ -61,43 +63,108 @@
                     :stop-color="stop.color"
                   />
                 </linearGradient>
+                <filter
+                  id="genome-active-glow"
+                  x="-30%"
+                  y="-30%"
+                  width="160%"
+                  height="160%"
+                >
+                  <feGaussianBlur stdDeviation="5" />
+                </filter>
+
+                <!-- The plate itself, used as a mask. This is the whole trick: the
+                     colour layers below are geometric strokes, but they are only
+                     visible where the plate has a particle, so what the eye sees is
+                     thousands of individually coloured specks rather than a coloured
+                     tube laid over white ones. SVG masks are luminance-based and the
+                     plate is white-on-transparent, so it works as-is. -->
+                <mask
+                  id="genome-particle-mask"
+                  maskUnits="userSpaceOnUse"
+                  :x="0"
+                  :y="0"
+                  :width="GEOM.w"
+                  :height="GEOM.h"
+                >
+                  <image
+                    :href="plateSrc"
+                    x="0"
+                    y="0"
+                    :width="GEOM.w"
+                    :height="GEOM.h"
+                    preserveAspectRatio="none"
+                  />
+                </mask>
               </defs>
 
-              <!-- backbone strands: a blend of every base, the library as a whole -->
-              <polyline
-                v-for="leg in legPaths"
-                :key="`leg-visual-${leg.key}`"
-                class="genome-tint"
-                :points="leg.points"
-                fill="none"
-                :stroke="
-                  hasBases ? 'url(#genome-backbone-gradient)' : neutralColor
-                "
-                stroke-width="15"
-                stroke-linecap="round"
-                :opacity="leg.key === active?.legKey ? 0.8 : 0.34"
-                :style="{
-                  strokeWidth: leg.key === active?.legKey ? '18px' : '15px',
-                }"
-              />
+              <g mask="url(#genome-particle-mask)">
+                <!-- backbone strands: a blend of every base, the library as a whole -->
+                <polyline
+                  v-for="leg in legPaths"
+                  :key="`leg-visual-${leg.key}`"
+                  class="genome-tint"
+                  :points="leg.points"
+                  fill="none"
+                  :stroke="
+                    hasBases ? 'url(#genome-backbone-gradient)' : neutralColor
+                  "
+                  stroke-width="15"
+                  stroke-linecap="round"
+                  :opacity="leg.key === active?.legKey ? 1 : 0.72"
+                  :style="{
+                    strokeWidth: leg.key === active?.legKey ? '18px' : '15px',
+                  }"
+                />
 
-              <!-- secondary genre rungs -->
-              <line
-                v-for="rung in allRungs"
-                :key="`rung-visual-${rung.i}`"
-                class="genome-tint"
-                :x1="rung.x1"
-                :y1="rung.y1"
-                :x2="rung.x2"
-                :y2="rung.y2"
-                :stroke="rung.strokeColor"
-                stroke-width="9"
-                stroke-linecap="round"
-                :opacity="rung.opacity"
-                :style="{
-                  strokeWidth: active?.rungIndex === rung.i ? '12px' : '9px',
-                }"
-              />
+                <!-- secondary genre rungs -->
+                <line
+                  v-for="rung in allRungs"
+                  :key="`rung-visual-${rung.i}`"
+                  class="genome-tint"
+                  :x1="rung.x1"
+                  :y1="rung.y1"
+                  :x2="rung.x2"
+                  :y2="rung.y2"
+                  :stroke="rung.strokeColor"
+                  stroke-width="9"
+                  stroke-linecap="round"
+                  :opacity="active?.rungIndex === rung.i ? 1 : rung.opacity"
+                  :style="{
+                    strokeWidth: active?.rungIndex === rung.i ? '12px' : '9px',
+                  }"
+                />
+              </g>
+
+              <!-- Focus highlight: the active element's own colour, blurred and
+                   screened back over it, so hovering lifts that rung out of the
+                   molecule instead of merely changing its width. Masked like
+                   everything else, so the glow still comes from the particles. -->
+              <g
+                v-if="activeGlow"
+                class="genome-glow"
+                mask="url(#genome-particle-mask)"
+                filter="url(#genome-active-glow)"
+              >
+                <line
+                  v-if="activeGlow.kind === 'rung'"
+                  :x1="activeGlow.x1"
+                  :y1="activeGlow.y1"
+                  :x2="activeGlow.x2"
+                  :y2="activeGlow.y2"
+                  :stroke="activeGlow.stroke"
+                  stroke-width="11"
+                  stroke-linecap="round"
+                />
+                <polyline
+                  v-else
+                  :points="activeGlow.points"
+                  fill="none"
+                  :stroke="activeGlow.stroke"
+                  stroke-width="16"
+                  stroke-linecap="round"
+                />
+              </g>
 
               <!-- reticle + leader line, shown while something is active -->
               <g v-if="reticle" class="genome-reticle">
@@ -201,11 +268,12 @@
                 <div
                   v-if="hudInfo.mixKnown"
                   class="genome-hud__bar-fill"
-                  :style="{ background: hudBarGradient }"
+                  :style="{ background: hudBarGradient, ...barMaskStyle }"
                 ></div>
                 <div
                   v-else
                   class="genome-hud__bar-fill genome-hud__bar-fill--neutral"
+                  :style="barMaskStyle"
                 ></div>
               </div>
               <div v-if="hudInfo.mixKnown" class="genome-hud__mix">
@@ -316,6 +384,10 @@ import { computed, ref } from "vue";
 // by helix_render.py, which is NOT run at build or runtime - it's kept in
 // the repo purely for provenance of how the PNG/JSON pair was produced.
 const plateSrc = new URL("@/assets/genome/helix.png", import.meta.url).href;
+// A strip of the same speck texture, used to mask the callout's mix bar so the bar is
+// made of the same material as the rung it describes rather than being a flat gradient.
+const barMaskSrc = new URL("@/assets/genome/helix_bar.png", import.meta.url)
+  .href;
 
 interface Rung {
   i: number;
@@ -408,14 +480,17 @@ interface RungView extends Rung {
 const allRungs = computed<RungView[]>(() =>
   GEOM.rungs.map((rung) => {
     const genre = pairs.value.get(rung.i) ?? null;
-    const baseOpacity = 0.26 + 0.2 * rung.face;
+    // Face-on rungs read brighter than edge-on ones, as they would in a real molecule.
+    // Higher than the old figures: the colour is now confined to the particles, so it
+    // has far less area to work with and needs the strength back.
+    const baseOpacity = 0.55 + 0.35 * rung.face;
     if (!genre) {
       // surplus rung: no genre left to pair with it - untinted, inert.
       return {
         ...rung,
         genre: null,
         strokeColor: neutralColor,
-        opacity: baseOpacity * 0.4,
+        opacity: baseOpacity * 0.3,
       };
     }
     const mixKnown = mixKnownRungIds.value.has(rung.i);
@@ -547,6 +622,38 @@ const hudInfo = computed<HudInfo | null>(() => {
   };
 });
 
+interface ActiveGlow {
+  kind: "rung" | "leg";
+  stroke: string;
+  x1?: number;
+  y1?: number;
+  x2?: number;
+  y2?: number;
+  points?: string;
+}
+const activeGlow = computed<ActiveGlow | null>(() => {
+  const target = active.value;
+  if (!target) return null;
+  if (target.legKey !== undefined) {
+    const leg = legPaths.value[target.legKey];
+    return {
+      kind: "leg",
+      points: leg.points,
+      stroke: hasBases.value ? "url(#genome-backbone-gradient)" : neutralColor,
+    };
+  }
+  const rung = allRungs.value.find((r) => r.i === target.rungIndex);
+  if (!rung || !rung.genre) return null;
+  return {
+    kind: "rung",
+    x1: rung.x1,
+    y1: rung.y1,
+    x2: rung.x2,
+    y2: rung.y2,
+    stroke: rung.strokeColor,
+  };
+});
+
 const reticle = computed(() => (hudInfo.value ? hudInfo.value.anchor : null));
 
 // Two placements, chosen in CSS rather than by measuring anything in JS.
@@ -593,6 +700,13 @@ const hudAnchor = computed(() => ({
   x: GEOM.w + 12,
   y: hudTopFraction.value * GEOM.h,
 }));
+
+const barMaskStyle = {
+  maskImage: `url("${barMaskSrc}")`,
+  WebkitMaskImage: `url("${barMaskSrc}")`,
+  maskSize: "100% 100%",
+  WebkitMaskSize: "100% 100%",
+};
 
 const hudBarGradient = computed(() => {
   if (!hudInfo.value || !hudInfo.value.mixKnown) return "";
@@ -729,7 +843,16 @@ const legAriaLabel = computed(() =>
   transition:
     opacity 0.16s ease,
     stroke-width 0.16s ease;
+}
+.genome-glow {
   mix-blend-mode: screen;
+  opacity: 0.85;
+  pointer-events: none;
+}
+.genome-plate__img {
+  /* Dimmed, because it is the unlit state. The tinted particles sit directly on top of
+     these same specks, so a bright base underneath would wash every colour out. */
+  opacity: 0.5;
 }
 .genome-hit {
   cursor: pointer;
@@ -798,9 +921,9 @@ const legAriaLabel = computed(() =>
 }
 .genome-hud__bar {
   display: flex;
-  height: 5px;
-  border-radius: 3px;
-  overflow: hidden;
+  /* Taller than a plain progress bar needs to be: it is masked by the speck texture,
+     and specks need room to read as specks. */
+  height: 13px;
   margin: 9px 0 2px;
 }
 .genome-hud__bar-fill {
