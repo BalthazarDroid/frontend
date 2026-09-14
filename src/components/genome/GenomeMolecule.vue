@@ -111,7 +111,7 @@
                   "
                   stroke-width="15"
                   stroke-linecap="round"
-                  :opacity="leg.key === active?.legKey ? 1 : 0.72"
+                  :opacity="leg.key === active?.legKey ? 1 : 0.88"
                   :style="{
                     strokeWidth: leg.key === active?.legKey ? '18px' : '15px',
                   }"
@@ -281,7 +281,7 @@
                   <span>
                     <span
                       class="genome-hud__dot"
-                      :style="{ background: baseColor(i) }"
+                      :style="{ background: bubble(i) }"
                     ></span>
                     {{ hudInfo.mixLabels[i] }}
                   </span>
@@ -326,7 +326,7 @@
                 <div class="genome-baserow__id">
                   <span
                     class="genome-baserow__dot"
-                    :style="{ background: baseColor(i) }"
+                    :style="{ background: bubble(i) }"
                   ></span>
                   <div>
                     <div class="genome-baserow__label">{{ base.label }}</div>
@@ -430,6 +430,21 @@ function baseColor(index: number, lightness = 60, saturation = 80): string {
 }
 const neutralColor = "hsl(220 6% 52%)";
 
+// The legend markers are the same object as a particle in the molecule: a soft-edged,
+// translucent blob, not a flat disc. A radial gradient reproduces the renderer's gaussian
+// falloff exactly, so no asset is needed - and a tiny highlight off-centre is what makes
+// it read as a bubble rather than a smudge.
+function bubble(index: number): string {
+  const core = baseColor(index, 68, 85);
+  const edge = baseColor(index, 52, 80);
+  return (
+    `radial-gradient(circle at 38% 34%, rgba(255,255,255,.55) 0%, ` +
+    `rgba(255,255,255,0) 34%), ` +
+    `radial-gradient(circle at 50% 50%, ${core} 0%, ${core} 38%, ${edge} 62%, ` +
+    `transparent 76%)`
+  );
+}
+
 // `base_mix` is [] when cross-genre affinity isn't computable, and absent entirely on a
 // payload from an older result schema. Both mean the same thing to the visual.
 function baseMix(genre: GenreShare): number[] {
@@ -483,7 +498,7 @@ const allRungs = computed<RungView[]>(() =>
     // Face-on rungs read brighter than edge-on ones, as they would in a real molecule.
     // Higher than the old figures: the colour is now confined to the particles, so it
     // has far less area to work with and needs the strength back.
-    const baseOpacity = 0.55 + 0.35 * rung.face;
+    const baseOpacity = 0.68 + 0.32 * rung.face;
     if (!genre) {
       // surplus rung: no genre left to pair with it - untinted, inert.
       return {
@@ -704,8 +719,12 @@ const hudAnchor = computed(() => ({
 const barMaskStyle = {
   maskImage: `url("${barMaskSrc}")`,
   WebkitMaskImage: `url("${barMaskSrc}")`,
-  maskSize: "100% 100%",
-  WebkitMaskSize: "100% 100%",
+  // auto width, not 100%: stretching the strip to the bar's width squashes every bubble
+  // into a tall oval. Tiling keeps them round at any bar width.
+  maskSize: "auto 100%",
+  WebkitMaskSize: "auto 100%",
+  maskRepeat: "repeat-x",
+  WebkitMaskRepeat: "repeat-x",
 };
 
 const hudBarGradient = computed(() => {
@@ -852,7 +871,7 @@ const legAriaLabel = computed(() =>
 .genome-plate__img {
   /* Dimmed, because it is the unlit state. The tinted particles sit directly on top of
      these same specks, so a bright base underneath would wash every colour out. */
-  opacity: 0.5;
+  opacity: 0.62;
 }
 .genome-hit {
   cursor: pointer;
@@ -923,7 +942,7 @@ const legAriaLabel = computed(() =>
   display: flex;
   /* Taller than a plain progress bar needs to be: it is masked by the speck texture,
      and specks need room to read as specks. */
-  height: 13px;
+  height: 15px;
   margin: 9px 0 2px;
 }
 .genome-hud__bar-fill {
@@ -952,10 +971,10 @@ const legAriaLabel = computed(() =>
 }
 .genome-hud__dot {
   display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  margin-right: 6px;
+  width: 11px;
+  height: 11px;
+  margin-right: 5px;
+  vertical-align: -1px;
 }
 .genome-hud__foot {
   display: flex;
@@ -1006,9 +1025,8 @@ const legAriaLabel = computed(() =>
 }
 .genome-baserow__dot {
   display: inline-block;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
+  width: 15px;
+  height: 15px;
   flex-shrink: 0;
 }
 .genome-baserow__code {

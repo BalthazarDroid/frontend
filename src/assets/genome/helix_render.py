@@ -49,7 +49,11 @@ def splat(xs,ys,zs,sizes,gains):
         acc[lo_y:hi_y, lo_x:hi_x]+=v
 
 # ---- backbone: a dense cloud scattered around each strand's path -------------
-PER_STEP, STEPS = 34, 420
+# Bubbles, not dust. The count is low and the radii are large and widely varied, and -
+# the part that actually matters - there are far fewer positions ALONG the path. A dense
+# chain of big blobs merges back into a tube however few you put at each step.
+PER_STEP, STEPS = 4, 190
+JITTER = 1.9
 for i in range(STEPS):
     t=i/STEPS
     for strand,(p) in enumerate(helix(t)):
@@ -57,16 +61,16 @@ for i in range(STEPS):
         # TWO populations. A tight bright core carries the strand's shape; a loose
         # dim haze around it is what makes the edge glitter instead of ending flat.
         nc=PER_STEP
-        jx=rng.normal(0,1.15*SS,nc); jy=rng.normal(0,1.15*SS,nc)
+        jx=rng.normal(0,JITTER*SS,nc); jy=rng.normal(0,JITTER*SS,nc)
         splat(p[0]+jx, p[1]+jy, [p[2]]*nc,
-              rng.uniform(0.7,1.9,nc)*SS*(0.6+0.5*depth),
-              rng.uniform(0.5,1.9,nc)*(0.45+0.95*depth))
-        nh=int(PER_STEP*0.8)
+              rng.uniform(1.8,4.6,nc)*SS*(0.6+0.5*depth),
+              rng.uniform(0.5,1.5,nc)*(0.45+0.95*depth))
+        nh=int(PER_STEP*0.6)
         hx=rng.normal(0,4.6*SS,nh); hy=rng.normal(0,4.6*SS,nh)
         far=rng.random(nh)<0.12; hx[far]*=2.6; hy[far]*=2.6
         splat(p[0]+hx, p[1]+hy, [p[2]]*nh,
               rng.uniform(0.5,1.5,nh)*SS*(0.5+0.5*depth),
-              rng.uniform(0.05,0.40,nh)*(0.3+0.8*depth))
+              rng.uniform(0.05,0.25,nh)*(0.3+0.8*depth))
 
 # ---- base pairs: sparser, finer clouds ---------------------------------------
 rungs=[]
@@ -74,23 +78,23 @@ for k in range(NRUNGS):
     t=(k+0.5)/NRUNGS
     a,b=helix(t)
     L=math.hypot(a[0]-b[0],a[1]-b[1])
-    n=max(220,int(L*1.9))
+    n=max(30,int(L*0.30))
     f=rng.random(n)
     px=a[0]+(b[0]-a[0])*f; py=a[1]+(b[1]-a[1])*f; pz=a[2]+(b[2]-a[2])*f
     px=px+rng.normal(0,1.35*SS,n); py=py+rng.normal(0,1.35*SS,n)
     depth=(pz/RAD+1)/2
-    splat(px,py,pz,rng.uniform(0.6,1.6,n)*SS*(0.55+0.5*depth),
-          rng.uniform(0.45,1.75,n)*(0.40+0.90*depth))
+    splat(px,py,pz,rng.uniform(1.8,4.6,n)*SS*(0.55+0.5*depth),
+          rng.uniform(0.5,1.5,n)*(0.40+0.90*depth))
     rungs.append({"i":k,"t":t,"x1":a[0]/SS,"y1":a[1]/SS,"x2":b[0]/SS,"y2":b[1]/SS,
                   "len":L/SS,"face":abs(math.cos(-0.45+2*math.pi*TURNS*t))})
 
 # ---- tone map + bloom --------------------------------------------------------
 lum=np.clip(acc,0,None)
-lum=1-np.exp(-lum*0.85)                      # soft rolloff keeps highlights from clipping
+lum=1-np.exp(-lum*0.58)                      # soft rolloff keeps highlights from clipping
 img8=(np.clip(lum,0,1)*255).astype(np.uint8)
 base=Image.fromarray(img8,"L")
 glow=base.filter(ImageFilter.GaussianBlur(7*SS/2))
-merged=np.maximum(np.asarray(base,np.float32), np.asarray(glow,np.float32)*0.72)
+merged=np.maximum(np.asarray(base,np.float32), np.asarray(glow,np.float32)*0.30)
 merged=np.clip(merged,0,255).astype(np.uint8)
 L=Image.fromarray(merged,"L").resize((W,H),Image.LANCZOS)
 arr=np.asarray(L,np.float32)/255.0
@@ -109,13 +113,15 @@ sacc = np.zeros((SH*SS,SW*SS),np.float32)
 # Placed on a jittered grid rather than scattered at random: independent random
 # positions clump, and clumps merge into a smear instead of reading as individual
 # specks. Two offset rows give the bar depth without closing the gaps.
-STEP = 8.5
-for row, (yc, rscale) in enumerate(((0.44, 1.0), (0.62, 0.72))):
+STEP = 9.0
+# One row only: two overlapping rows fused into vertical ovals once the strip was
+# squashed into the bar's height, which read as tick marks rather than bubbles.
+for row, (yc, rscale) in enumerate(((0.5, 1.0),)):
     n = int(SW / STEP)
     for i in range(n):
         x = (i + 0.5 + rng.uniform(-0.22, 0.22)) * STEP * SS
-        y = (SH * yc + rng.normal(0, 0.5)) * SS
-        r = rng.uniform(2.0, 3.0) * rscale * SS
+        y = (SH * yc + rng.normal(0, 0.35)) * SS
+        r = rng.uniform(2.2, 4.0) * rscale * SS
         g = rng.uniform(0.8, 1.5) * (1.0 if row == 0 else 0.7)
         lo_x=max(0,int(x-r-1)); hi_x=min(SW*SS,int(x+r+2))
         lo_y=max(0,int(y-r-1)); hi_y=min(SH*SS,int(y+r+2))
