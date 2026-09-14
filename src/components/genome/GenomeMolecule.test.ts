@@ -10,6 +10,7 @@
  */
 import { mount } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
+import { nextTick } from "vue";
 import GenomeMolecule from "./GenomeMolecule.vue";
 import { i18n } from "@/plugins/i18n";
 import type { GenreShare } from "@/composables/genome/types";
@@ -21,7 +22,7 @@ function genre(key: string, share: number, mix?: number[]): GenreShare {
     share,
     baseline_share: 0.01,
     ratio: share / 0.01,
-    contribution: 0.1,
+    contribution: share,
     ...(mix === undefined ? {} : { base_mix: mix }),
   } as GenreShare;
 }
@@ -64,10 +65,23 @@ describe("GenomeMolecule", () => {
       totalListens: 100,
     });
     expect(w.find(".genome-stage").exists()).toBe(true);
-    // No rung can be tinted by a mix nobody supplied, so none of them get a gradient.
-    expect(
-      w.findAll("linearGradient[id^='genome-rung-gradient-']"),
-    ).toHaveLength(0);
+    expect(w.find("canvas").exists()).toBe(true);
+  });
+
+  it("offers a keyboard hit target for every lit rung, plus both strands", async () => {
+    // The molecule is drawn to a canvas, so these SVG lines are the ONLY way the same
+    // information is reachable without a pointer. A canvas with no hit targets beside it
+    // is a picture, not a control.
+    const w = render({ genres, bases, totalListens: 100 });
+    await nextTick();
+    const targets = w.findAll(".genome-hit");
+    // one per genre that earned a lit rung (here: the single genre with a contribution),
+    // plus one per strand
+    expect(targets.length).toBeGreaterThanOrEqual(2);
+    for (const t of targets) {
+      expect(t.attributes("tabindex")).toBe("0");
+      expect(t.attributes("aria-label")).toBeTruthy();
+    }
   });
 
   it("renders with no genres at all", () => {

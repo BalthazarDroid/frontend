@@ -15,188 +15,21 @@
            viewport's - the page has a sidebar, so those are not the same number. -->
       <div class="genome-shell">
         <div class="genome-stage">
-          <div class="genome-plate">
-            <!-- The unlit dust. Every particle that no genre claims stays this
-                 colourless grey; the tinted layer above lights the rest. -->
-            <img
-              :src="plateSrc"
-              alt=""
-              aria-hidden="true"
-              class="genome-plate__img"
-            />
+          <div
+            ref="plateEl"
+            class="genome-plate"
+            @pointermove="onPointerMove"
+            @pointerleave="clearHover"
+            @click="onClick"
+          >
+            <canvas ref="canvasEl" class="genome-plate__canvas"></canvas>
+
             <svg
               class="genome-plate__svg"
-              :viewBox="`0 0 ${GEOM.w} ${GEOM.h}`"
+              :viewBox="`0 0 ${HELIX_W} ${HELIX_H}`"
               role="group"
               :aria-label="$t('listening_genome.molecule.svg_aria')"
             >
-              <defs>
-                <linearGradient
-                  id="genome-backbone-gradient"
-                  gradientUnits="userSpaceOnUse"
-                  :x1="0"
-                  :y1="GEOM.h"
-                  :x2="0"
-                  :y2="0"
-                >
-                  <stop
-                    v-for="stop in backboneStops"
-                    :key="stop.offsetPercent"
-                    :offset="`${stop.offsetPercent}%`"
-                    :stop-color="stop.color"
-                  />
-                </linearGradient>
-                <linearGradient
-                  v-for="rung in tintedRungs"
-                  :id="`genome-rung-gradient-${rung.i}`"
-                  :key="`grad-${rung.i}`"
-                  gradientUnits="userSpaceOnUse"
-                  :x1="Math.min(rung.x1, rung.x2)"
-                  :y1="(rung.y1 + rung.y2) / 2"
-                  :x2="Math.max(rung.x1, rung.x2)"
-                  :y2="(rung.y1 + rung.y2) / 2"
-                >
-                  <stop
-                    v-for="stop in rung.stops"
-                    :key="stop.offsetPercent"
-                    :offset="`${stop.offsetPercent}%`"
-                    :stop-color="stop.color"
-                  />
-                </linearGradient>
-                <filter
-                  id="genome-active-glow"
-                  x="-30%"
-                  y="-30%"
-                  width="160%"
-                  height="160%"
-                >
-                  <feGaussianBlur stdDeviation="5" />
-                </filter>
-
-                <!-- The plate itself, used as a mask. This is the whole trick: the
-                     colour layers below are geometric strokes, but they are only
-                     visible where the plate has a particle, so what the eye sees is
-                     thousands of individually coloured specks rather than a coloured
-                     tube laid over white ones. SVG masks are luminance-based and the
-                     plate is white-on-transparent, so it works as-is. -->
-                <mask
-                  id="genome-particle-mask"
-                  maskUnits="userSpaceOnUse"
-                  :x="0"
-                  :y="0"
-                  :width="GEOM.w"
-                  :height="GEOM.h"
-                >
-                  <image
-                    :href="plateSrc"
-                    x="0"
-                    y="0"
-                    :width="GEOM.w"
-                    :height="GEOM.h"
-                    preserveAspectRatio="none"
-                  />
-                </mask>
-              </defs>
-
-              <g
-                class="genome-halo"
-                mask="url(#genome-particle-mask)"
-                filter="url(#genome-active-glow)"
-              >
-                <polyline
-                  v-for="leg in legPaths"
-                  :key="`leg-halo-${leg.key}`"
-                  :points="leg.points"
-                  fill="none"
-                  :stroke="
-                    hasBases ? 'url(#genome-backbone-gradient)' : neutralColor
-                  "
-                  stroke-width="17"
-                  stroke-linecap="round"
-                />
-                <line
-                  v-for="rung in interactiveRungs"
-                  :key="`rung-halo-${rung.i}`"
-                  :x1="rung.x1"
-                  :y1="rung.y1"
-                  :x2="rung.x2"
-                  :y2="rung.y2"
-                  :stroke="rung.strokeColor"
-                  stroke-width="10"
-                  stroke-linecap="round"
-                  :opacity="rung.opacity"
-                />
-              </g>
-
-              <g mask="url(#genome-particle-mask)">
-                <!-- backbone strands: a blend of every base, the library as a whole -->
-                <polyline
-                  v-for="leg in legPaths"
-                  :key="`leg-visual-${leg.key}`"
-                  class="genome-tint"
-                  :points="leg.points"
-                  fill="none"
-                  :stroke="
-                    hasBases ? 'url(#genome-backbone-gradient)' : neutralColor
-                  "
-                  stroke-width="15"
-                  stroke-linecap="round"
-                  :opacity="leg.key === active?.legKey ? 1 : 0.88"
-                  :style="{
-                    strokeWidth: leg.key === active?.legKey ? '18px' : '15px',
-                  }"
-                />
-
-                <!-- secondary genre rungs -->
-                <line
-                  v-for="rung in allRungs"
-                  :key="`rung-visual-${rung.i}`"
-                  class="genome-tint"
-                  :x1="rung.x1"
-                  :y1="rung.y1"
-                  :x2="rung.x2"
-                  :y2="rung.y2"
-                  :stroke="rung.strokeColor"
-                  stroke-width="9"
-                  stroke-linecap="round"
-                  :opacity="active?.rungIndex === rung.i ? 1 : rung.opacity"
-                  :style="{
-                    strokeWidth: active?.rungIndex === rung.i ? '12px' : '9px',
-                  }"
-                />
-              </g>
-
-              <!-- Focus highlight: the active element's own colour, blurred and
-                   screened back over it, so hovering lifts that rung out of the
-                   molecule instead of merely changing its width. Masked like
-                   everything else, so the glow still comes from the particles. -->
-              <g
-                v-if="activeGlow"
-                class="genome-glow"
-                mask="url(#genome-particle-mask)"
-                filter="url(#genome-active-glow)"
-              >
-                <line
-                  v-if="activeGlow.kind === 'rung'"
-                  :x1="activeGlow.x1"
-                  :y1="activeGlow.y1"
-                  :x2="activeGlow.x2"
-                  :y2="activeGlow.y2"
-                  :stroke="activeGlow.stroke"
-                  stroke-width="11"
-                  stroke-linecap="round"
-                />
-                <polyline
-                  v-else
-                  :points="activeGlow.points"
-                  fill="none"
-                  :stroke="activeGlow.stroke"
-                  stroke-width="16"
-                  stroke-linecap="round"
-                />
-              </g>
-
-              <!-- reticle + leader line, shown while something is active -->
               <g v-if="reticle" class="genome-reticle">
                 <circle
                   :cx="reticle.x"
@@ -221,69 +54,44 @@
                   class="genome-leader"
                   :x1="reticle.x + 13"
                   :y1="reticle.y"
-                  :x2="hudAnchor.x"
-                  :y2="hudAnchor.y + 24"
+                  :x2="HELIX_W + 12"
+                  :y2="hudTopFraction * HELIX_H + 24"
                   stroke="#fff"
                   stroke-width="1"
                   opacity=".55"
                 />
               </g>
 
-              <!-- hit targets: one focusable, hoverable element per interactive
-                 rung/leg. Rungs with no paired genre (more rungs than
-                 genres) intentionally get no hit target: untinted and
-                 non-interactive, per the pairing rule. -->
+              <!-- Keyboard hit targets. The molecule turns, so there is nothing static
+                   to attach a hit area to: pointer hover is resolved against the canvas
+                   instead (onPointerMove), and these exist so the same information is
+                   reachable by Tab. Their geometry follows the molecule, refreshed at a
+                   low rate while it spins and immediately once it stops. -->
               <line
-                v-for="leg in legPaths"
-                :key="`leg-hit-${leg.key}`"
+                v-for="target in hitTargets"
+                :key="`hit-${target.key}`"
                 class="genome-hit"
-                :x1="leg.hitX1"
-                :y1="leg.hitY1"
-                :x2="leg.hitX2"
-                :y2="leg.hitY2"
+                :x1="target.x1"
+                :y1="target.y1"
+                :x2="target.x2"
+                :y2="target.y2"
                 stroke="transparent"
-                stroke-width="26"
+                :stroke-width="target.kind === 'leg' ? 26 : 20"
                 stroke-linecap="round"
                 tabindex="0"
                 role="button"
-                :aria-label="legAriaLabel"
-                @mouseenter="setHover({ legKey: leg.key })"
-                @mouseleave="clearHover"
-                @focus="setHover({ legKey: leg.key })"
+                :aria-label="target.label"
+                @focus="setHover(target.active)"
                 @blur="clearHover"
-                @click="togglePin({ legKey: leg.key })"
-                @keydown.enter.prevent="togglePin({ legKey: leg.key })"
-                @keydown.space.prevent="togglePin({ legKey: leg.key })"
-              />
-              <line
-                v-for="rung in interactiveRungs"
-                :key="`rung-hit-${rung.i}`"
-                class="genome-hit"
-                :x1="rung.x1"
-                :y1="rung.y1"
-                :x2="rung.x2"
-                :y2="rung.y2"
-                stroke="transparent"
-                stroke-width="20"
-                stroke-linecap="round"
-                tabindex="0"
-                role="button"
-                :aria-label="rungAriaLabel(rung.genre)"
-                @mouseenter="setHover({ rungIndex: rung.i })"
-                @mouseleave="clearHover"
-                @focus="setHover({ rungIndex: rung.i })"
-                @blur="clearHover"
-                @click="togglePin({ rungIndex: rung.i })"
-                @keydown.enter.prevent="togglePin({ rungIndex: rung.i })"
-                @keydown.space.prevent="togglePin({ rungIndex: rung.i })"
+                @keydown.enter.prevent="togglePin(target.active)"
+                @keydown.space.prevent="togglePin(target.active)"
               />
             </svg>
           </div>
 
           <!-- The callout lives in the stage, not the plate: on a wide card it sits in
-             its own lane beside the molecule (the leader line runs out of the SVG,
-             which is why that element keeps overflow: visible), and only overlays the
-             molecule when the card is too narrow to give it a lane of its own. -->
+               its own lane beside the molecule, and only overlays the molecule when the
+               card is too narrow to give it a lane of its own. -->
           <div
             v-if="hudInfo"
             class="genome-hud on"
@@ -394,55 +202,48 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { GenreShare } from "@/composables/genome/types";
-import geometry from "@/assets/genome/helix_geometry.json";
 import {
-  backboneGradientStops,
+  backboneBands,
+  bandAt,
+  buildField,
+  distanceToSegment,
+  HELIX_H,
+  HELIX_W,
+  LIT_RUNGS,
+  mostDivergent,
+  pairRungsWithGenres,
+  project,
+  secondaryGenres,
+  type Band,
+  type ParticleField,
+} from "@/helpers/genome_helix";
+import {
   baseCode,
   estimatePlays,
   mixGradientStops,
-  pairRungsWithGenres,
   secondaryCode,
-  secondaryGenres,
   statusForRatio,
   type ExpressionStatus,
 } from "@/helpers/genome_molecule";
 import { formatPercent, formatPlays } from "@/helpers/genome_format";
 import { $t } from "@/plugins/i18n";
-import { computed, ref } from "vue";
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  shallowRef,
+  watch,
+} from "vue";
 
-// The pre-rendered particle-cloud plate (540x700). Generated at design time
-// by helix_render.py, which is NOT run at build or runtime - it's kept in
-// the repo purely for provenance of how the PNG/JSON pair was produced.
-const plateSrc = new URL("@/assets/genome/helix.png", import.meta.url).href;
-// A strip of the same speck texture, used to mask the callout's mix bar so the bar is
-// made of the same material as the rung it describes rather than being a flat gradient.
+// A strip of speck texture, used to mask the callout's mix bar so the bar is made of the
+// same material as the rung it describes rather than being a flat gradient.
 const barMaskSrc = new URL("@/assets/genome/helix_bar.png", import.meta.url)
   .href;
-
-interface Rung {
-  i: number;
-  t: number;
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  len: number;
-  face: number;
-}
-interface Geometry {
-  w: number;
-  h: number;
-  rungs: Rung[];
-  legs: { A: [number, number][]; B: [number, number][] };
-  tube_r: number;
-  rung_r: number;
-}
-const GEOM = geometry as Geometry;
 
 // Defaulted rather than required: a genome served from a cache written by an older
 // result shape can arrive without `bases`, and a component that throws on a missing
 // field takes its whole card down with it (silently - nothing reaches the server log).
-// Degrading to the no-bases state is the honest failure here.
 const props = withDefaults(
   defineProps<{
     genres?: GenreShare[];
@@ -452,18 +253,20 @@ const props = withDefaults(
   { genres: () => [], bases: () => [], totalListens: 0 },
 );
 
-// Fixed hues for up to 4 bases - a purely presentational palette, not tied to
-// genre identity, so it's stable regardless of which genres occupy the slots.
+// ---- palette ------------------------------------------------------------------
+
+// Fixed hues for up to 4 bases - a purely presentational palette, not tied to genre
+// identity, so it's stable regardless of which genres occupy the slots.
 const HUES = [188, 288, 146, 30];
-function baseColor(index: number, lightness = 60, saturation = 80): string {
+function baseColor(index: number, lightness = 62, saturation = 82): string {
   return `hsl(${HUES[index % HUES.length]} ${saturation}% ${lightness}%)`;
 }
-const neutralColor = "hsl(220 6% 52%)";
+/** Uncoloured particles: the structure everything else is suspended in. */
+const DUST = "hsl(210 12% 88%)";
 
 // The legend markers are the same object as a particle in the molecule: a soft-edged,
-// translucent blob, not a flat disc. A radial gradient reproduces the renderer's gaussian
-// falloff exactly, so no asset is needed - and a tiny highlight off-centre is what makes
-// it read as a bubble rather than a smudge.
+// translucent blob, not a flat disc. A radial gradient reproduces the renderer's falloff,
+// and a highlight off-centre is what makes it read as a bubble rather than a smudge.
 function bubble(index: number): string {
   const core = baseColor(index, 68, 85);
   const edge = baseColor(index, 52, 80);
@@ -475,103 +278,55 @@ function bubble(index: number): string {
   );
 }
 
+/** Shortest-path hue interpolation, so cyan never blends through red to reach orange. */
+function mixHue(a: number, b: number, f: number): number {
+  const delta = ((b - a + 540) % 360) - 180;
+  return (a + delta * f + 360) % 360;
+}
+
+/**
+ * A rung's colour: the hue of the base it most belongs to, with saturation and lightness
+ * scaled by how purely it belongs there. A genre split evenly across all four bases has
+ * no business looking like a pure note of one of them.
+ */
+function rungColor(mix: number[]): string {
+  if (mix.length === 0) return DUST;
+  let best = 0;
+  for (let i = 1; i < mix.length; i++) if (mix[i] > mix[best]) best = i;
+  const purity = mix[best];
+  const hue = HUES[best % HUES.length];
+  return `hsl(${hue} ${Math.round(55 + 35 * purity)}% ${Math.round(
+    56 + 12 * purity,
+  )}%)`;
+}
+
+// ---- data shaping ---------------------------------------------------------------
+
+const bases = computed(() => props.bases);
+const hasBases = computed(() => bases.value.length > 0);
+
 // `base_mix` is [] when cross-genre affinity isn't computable, and absent entirely on a
 // payload from an older result schema. Both mean the same thing to the visual.
 function baseMix(genre: GenreShare): number[] {
   return genre.base_mix ?? [];
 }
 
-const bases = computed(() => props.bases);
-const hasBases = computed(() => bases.value.length > 0);
-
+const field: ParticleField = buildField();
 const secondary = computed(() => secondaryGenres(props.genres, props.bases));
-const secondaryRank = computed(() => {
+/** The lit rungs: the genres that account for most of the household's divergence. */
+const lit = computed(() => mostDivergent(secondary.value, LIT_RUNGS));
+const litRank = computed(() => {
   const map = new Map<string, number>();
-  secondary.value.forEach((g, i) => map.set(g.key, i));
+  lit.value.forEach((g, i) => map.set(g.key, i));
   return map;
 });
-const pairs = computed(() => pairRungsWithGenres(GEOM.rungs, secondary.value));
 
-const backboneStops = computed(() =>
-  backboneGradientStops(bases.value.length, (i) => baseColor(i, 58)),
-);
+// Paired once, at phase zero. Pairing by a rung's CURRENT length would reshuffle the
+// genres every frame as the molecule turned, which is nonsense: a genre has a rung.
+const pairs = computed(() => pairRungsWithGenres(field.rungs, lit.value));
+const bands = computed<Band[]>(() => backboneBands(props.bases));
 
-interface TintedRung extends Rung {
-  genre: GenreShare;
-  stops: { offsetPercent: number; color: string }[];
-}
-const tintedRungs = computed<TintedRung[]>(() => {
-  const out: TintedRung[] = [];
-  for (const rung of GEOM.rungs) {
-    const genre = pairs.value.get(rung.i);
-    if (!genre || baseMix(genre).length === 0) continue;
-    out.push({
-      ...rung,
-      genre,
-      stops: mixGradientStops(baseMix(genre), (i) => baseColor(i, 60)),
-    });
-  }
-  return out;
-});
-const mixKnownRungIds = computed(
-  () => new Set(tintedRungs.value.map((r) => r.i)),
-);
-
-interface RungView extends Rung {
-  genre: GenreShare | null;
-  strokeColor: string;
-  opacity: number;
-}
-const allRungs = computed<RungView[]>(() =>
-  GEOM.rungs.map((rung) => {
-    const genre = pairs.value.get(rung.i) ?? null;
-    // Face-on rungs read brighter than edge-on ones, as they would in a real molecule.
-    // Higher than the old figures: the colour is now confined to the particles, so it
-    // has far less area to work with and needs the strength back.
-    const baseOpacity = 0.68 + 0.32 * rung.face;
-    if (!genre) {
-      // surplus rung: no genre left to pair with it - untinted, inert.
-      return {
-        ...rung,
-        genre: null,
-        strokeColor: neutralColor,
-        opacity: baseOpacity * 0.3,
-      };
-    }
-    const mixKnown = mixKnownRungIds.value.has(rung.i);
-    return {
-      ...rung,
-      genre,
-      strokeColor: mixKnown
-        ? `url(#genome-rung-gradient-${rung.i})`
-        : neutralColor,
-      opacity: baseOpacity,
-    };
-  }),
-);
-const interactiveRungs = computed(() => allRungs.value.filter((r) => r.genre));
-
-const legPaths = computed(() =>
-  (["A", "B"] as const).map((key, legIndex) => {
-    const points = GEOM.legs[key];
-    const mid = points[Math.floor(points.length / 2)];
-    const start = points[0];
-    return {
-      key: legIndex,
-      points: points.map((p) => `${p[0]},${p[1]}`).join(" "),
-      // A single generous hit target down the middle third of the strand -
-      // one Tab stop per leg rather than the mockup's per-point mouse-hover
-      // granularity, which has no sane keyboard equivalent.
-      hitX1: start[0],
-      hitY1: start[1],
-      hitX2: points[points.length - 1][0],
-      hitY2: points[points.length - 1][1],
-      anchor: mid,
-    };
-  }),
-);
-
-// ---- interaction state ------------------------------------------------
+// ---- interaction state -----------------------------------------------------------
 
 interface ActiveTarget {
   rungIndex?: number;
@@ -594,21 +349,360 @@ function togglePin(t: ActiveTarget): void {
   pinned.value = targetsEqual(pinned.value, t) ? null : t;
 }
 
-// Nothing hovered/pinned/focused: default to the longest rung, matching the
-// mockup's initial state so the callout is never blank on load.
-const defaultTarget = computed<ActiveTarget | null>(() => {
-  const longest = interactiveRungs.value.reduce<RungView | null>(
-    (best, r) => (!best || r.len > best.len ? r : best),
-    null,
-  );
-  return longest ? { rungIndex: longest.i } : null;
-});
-
 const active = computed<ActiveTarget | null>(
-  () => hovered.value ?? pinned.value ?? defaultTarget.value,
+  () => hovered.value ?? pinned.value,
 );
 
-// ---- HUD content --------------------------------------------------------
+// ---- the clock -------------------------------------------------------------------
+
+// One revolution takes a little over three minutes. Slow enough to read as drift rather
+// than motion, which is the only speed tolerable on a page left open.
+const RADIANS_PER_SECOND = 0.032;
+
+const phase = ref(0);
+const prefersReducedMotion =
+  typeof window !== "undefined" && typeof window.matchMedia === "function"
+    ? window.matchMedia("(prefers-reduced-motion: reduce)")
+    : null;
+const reduceMotion = ref(prefersReducedMotion?.matches ?? false);
+const pageHidden = ref(false);
+
+// Three reasons to hold still, all of them about not fighting the reader: the tab is
+// hidden (pure waste), something is hovered or pinned (a callout chasing a moving target
+// is unusable), or the reader has asked the system for less motion.
+const spinning = computed(
+  () => !pageHidden.value && !reduceMotion.value && active.value === null,
+);
+
+let rafId: number | null = null;
+let lastFrame = 0;
+let lastTargetsAt = 0;
+
+// ---- canvas ----------------------------------------------------------------------
+
+const plateEl = ref<HTMLElement | null>(null);
+const canvasEl = ref<HTMLCanvasElement | null>(null);
+let ctx: CanvasRenderingContext2D | null = null;
+let resizeObserver: ResizeObserver | null = null;
+
+const SPRITE = 34;
+const spriteCache = new Map<string, HTMLCanvasElement>();
+function spriteFor(color: string): HTMLCanvasElement | null {
+  const cached = spriteCache.get(color);
+  if (cached) return cached;
+  if (typeof document === "undefined") return null;
+  const c = document.createElement("canvas");
+  c.width = c.height = SPRITE;
+  const g = c.getContext("2d");
+  if (!g) return null;
+  const grad = g.createRadialGradient(
+    SPRITE / 2,
+    SPRITE / 2,
+    0,
+    SPRITE / 2,
+    SPRITE / 2,
+    SPRITE / 2,
+  );
+  grad.addColorStop(0, color);
+  grad.addColorStop(0.45, color);
+  grad.addColorStop(1, "transparent");
+  g.fillStyle = grad;
+  g.beginPath();
+  g.arc(SPRITE / 2, SPRITE / 2, SPRITE / 2, 0, Math.PI * 2);
+  g.fill();
+  spriteCache.set(color, c);
+  return c;
+}
+
+function blob(
+  g: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radius: number,
+  color: string,
+  alpha: number,
+): void {
+  if (alpha <= 0.004) return;
+  const sprite = spriteFor(color);
+  if (!sprite) return;
+  g.globalAlpha = Math.min(1, alpha);
+  const d = radius * 4;
+  g.drawImage(sprite, x - d / 2, y - d / 2, d, d);
+}
+
+/** The backbone's colour at a point: the band's base, softened toward its neighbour. */
+function legColor(t: number): string {
+  const list = bands.value;
+  if (list.length === 0) return DUST;
+  const { index, next, mix } = bandAt(list, t);
+  const h1 = HUES[list[index].baseIndex % HUES.length];
+  const hue =
+    next === -1
+      ? h1
+      : mixHue(h1, HUES[list[next].baseIndex % HUES.length], mix);
+  // Saturated enough to read as a band of that base's colour, light enough to stay
+  // subordinate to the lit rungs - the backbone is where the listening SITS, the rungs
+  // are what makes it unusual.
+  return `hsl(${hue} 50% 70%)`;
+}
+
+function draw(): void {
+  const g = ctx;
+  const canvas = canvasEl.value;
+  if (!g || !canvas) return;
+
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.clearRect(0, 0, canvas.width, canvas.height);
+  const scale = canvas.width / HELIX_W;
+  g.setTransform(scale, 0, 0, scale, 0, 0);
+  // Additive: overlapping particles accumulate light, which is what gives an open cloud
+  // a sense of density without any single particle being opaque.
+  g.globalCompositeOperation = "lighter";
+
+  const p = phase.value;
+  const activeTarget = active.value;
+
+  for (const particle of field.legs) {
+    const { x, y, depth } = project(
+      particle.t,
+      particle.leg,
+      p,
+      particle.dTheta,
+      particle.dRadius,
+      particle.dY,
+    );
+    const legActive = activeTarget?.legKey === particle.leg;
+    blob(
+      g,
+      x,
+      y,
+      particle.size * (0.6 + 0.5 * depth) * (legActive ? 1.2 : 1),
+      legColor(particle.t),
+      particle.gain * (0.1 + 0.95 * depth) * (legActive ? 0.9 : 0.46),
+    );
+  }
+
+  for (const rung of field.rungs) {
+    const genre = pairs.value.get(rung.index);
+    const isLit = genre !== undefined;
+    const color = genre ? rungColor(baseMix(genre)) : DUST;
+    const isActive = activeTarget?.rungIndex === rung.index;
+    for (const q of rung.particles) {
+      const a = project(rung.t, 0, p, 0, q.dRadius, q.dY);
+      const b = project(rung.t, 1, p, 0, q.dRadius, q.dY);
+      const x = a.x + (b.x - a.x) * q.f;
+      const y = a.y + (b.y - a.y) * q.f;
+      const depth = a.depth + (b.depth - a.depth) * q.f;
+      const dgain = q.gain * (0.1 + 0.95 * depth);
+      // A lit rung gets a wide, faint halo under its specks. That halo is most of what
+      // makes it read as a band of light rather than a dotted line.
+      if (isLit) {
+        blob(g, x, y, q.size * 3.4, color, dgain * (isActive ? 0.3 : 0.15));
+      }
+      blob(
+        g,
+        x,
+        y,
+        q.size * (0.55 + 0.5 * depth) * (isActive ? 1.3 : 1),
+        color,
+        dgain * (isLit ? 0.92 : 0.26) * (isActive ? 1.7 : 1),
+      );
+    }
+  }
+
+  g.globalCompositeOperation = "source-over";
+  g.globalAlpha = 1;
+}
+
+function resizeCanvas(): void {
+  const canvas = canvasEl.value;
+  const host = plateEl.value;
+  if (!canvas || !host) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const width = Math.max(1, Math.round(host.clientWidth * dpr));
+  const height = Math.round((width * HELIX_H) / HELIX_W);
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width;
+    canvas.height = height;
+  }
+  draw();
+}
+
+function frame(now: number): void {
+  const dt = Math.min(0.05, (now - lastFrame) / 1000);
+  lastFrame = now;
+  if (spinning.value) {
+    phase.value += RADIANS_PER_SECOND * dt;
+    // Keyboard hit targets follow the molecule, but they only have to be accurate once
+    // it has stopped - which is exactly when anything can be focused. Refreshing them
+    // every frame would re-render 28 SVG nodes for nobody's benefit.
+    if (now - lastTargetsAt > 250) {
+      lastTargetsAt = now;
+      refreshHitTargets();
+    }
+  }
+  draw();
+  rafId = requestAnimationFrame(frame);
+}
+
+// ---- hit testing -------------------------------------------------------------------
+
+/** Convert a pointer position to plate coordinates. */
+function toPlate(
+  event: PointerEvent | MouseEvent,
+): { x: number; y: number } | null {
+  const host = plateEl.value;
+  if (!host) return null;
+  const rect = host.getBoundingClientRect();
+  if (rect.width === 0) return null;
+  const scale = HELIX_W / rect.width;
+  return {
+    x: (event.clientX - rect.left) * scale,
+    y: (event.clientY - rect.top) * scale,
+  };
+}
+
+const RUNG_HIT_RADIUS = 16;
+const LEG_HIT_RADIUS = 13;
+const LEG_HIT_SEGMENTS = 60;
+
+/** The rung or strand nearest the pointer, or null when it is over empty space. */
+function pick(x: number, y: number): ActiveTarget | null {
+  const p = phase.value;
+  let best: ActiveTarget | null = null;
+  let bestDistance = Number.POSITIVE_INFINITY;
+
+  for (const rung of field.rungs) {
+    if (!pairs.value.has(rung.index)) continue; // unlit rungs carry nothing to show
+    const a = project(rung.t, 0, p);
+    const b = project(rung.t, 1, p);
+    const d = distanceToSegment(x, y, a.x, a.y, b.x, b.y);
+    if (d < bestDistance && d < RUNG_HIT_RADIUS) {
+      bestDistance = d;
+      best = { rungIndex: rung.index };
+    }
+  }
+
+  for (const leg of [0, 1] as const) {
+    for (let i = 0; i < LEG_HIT_SEGMENTS; i++) {
+      const a = project(i / LEG_HIT_SEGMENTS, leg, p);
+      const b = project((i + 1) / LEG_HIT_SEGMENTS, leg, p);
+      const d = distanceToSegment(x, y, a.x, a.y, b.x, b.y);
+      if (d < bestDistance && d < LEG_HIT_RADIUS) {
+        bestDistance = d;
+        best = { legKey: leg };
+      }
+    }
+  }
+  return best;
+}
+
+function onPointerMove(event: PointerEvent): void {
+  const point = toPlate(event);
+  if (!point) return;
+  const hit = pick(point.x, point.y);
+  if (hit) setHover(hit);
+  else clearHover();
+}
+
+function onClick(event: MouseEvent): void {
+  const point = toPlate(event);
+  if (!point) return;
+  const hit = pick(point.x, point.y);
+  if (hit) togglePin(hit);
+}
+
+interface HitTarget {
+  key: string;
+  kind: "leg" | "rung";
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  label: string;
+  active: ActiveTarget;
+}
+const hitTargets = shallowRef<HitTarget[]>([]);
+
+function refreshHitTargets(): void {
+  const p = phase.value;
+  const out: HitTarget[] = [];
+  for (const leg of [0, 1] as const) {
+    const a = project(0, leg, p);
+    const b = project(1, leg, p);
+    out.push({
+      key: `leg-${leg}`,
+      kind: "leg",
+      x1: a.x,
+      y1: a.y,
+      x2: b.x,
+      y2: b.y,
+      label: legAriaLabel.value,
+      active: { legKey: leg },
+    });
+  }
+  for (const rung of field.rungs) {
+    const genre = pairs.value.get(rung.index);
+    if (!genre) continue;
+    const a = project(rung.t, 0, p);
+    const b = project(rung.t, 1, p);
+    out.push({
+      key: `rung-${rung.index}`,
+      kind: "rung",
+      x1: a.x,
+      y1: a.y,
+      x2: b.x,
+      y2: b.y,
+      label: rungAriaLabel(genre),
+      active: { rungIndex: rung.index },
+    });
+  }
+  hitTargets.value = out;
+}
+
+// ---- lifecycle ---------------------------------------------------------------------
+
+function onVisibility(): void {
+  pageHidden.value = document.visibilityState === "hidden";
+}
+function onMotionPreference(event: MediaQueryListEvent): void {
+  reduceMotion.value = event.matches;
+}
+
+onMounted(() => {
+  const canvas = canvasEl.value;
+  if (canvas) ctx = canvas.getContext("2d");
+  resizeCanvas();
+  refreshHitTargets();
+  if (typeof ResizeObserver !== "undefined" && plateEl.value) {
+    resizeObserver = new ResizeObserver(() => resizeCanvas());
+    resizeObserver.observe(plateEl.value);
+  }
+  document.addEventListener("visibilitychange", onVisibility);
+  onVisibility();
+  prefersReducedMotion?.addEventListener?.("change", onMotionPreference);
+  if (typeof requestAnimationFrame === "function") {
+    lastFrame = performance.now();
+    rafId = requestAnimationFrame(frame);
+  }
+});
+
+onBeforeUnmount(() => {
+  if (rafId !== null) cancelAnimationFrame(rafId);
+  resizeObserver?.disconnect();
+  document.removeEventListener("visibilitychange", onVisibility);
+  prefersReducedMotion?.removeEventListener?.("change", onMotionPreference);
+});
+
+// Stopping is the moment the hit targets must be exact, because that is when they can be
+// focused and when the callout is anchored.
+watch(active, () => refreshHitTargets());
+watch([() => props.genres, () => props.bases], () => {
+  refreshHitTargets();
+  draw();
+});
+
+// ---- callout ------------------------------------------------------------------------
 
 interface HudInfo {
   code: string;
@@ -626,7 +720,7 @@ const hudInfo = computed<HudInfo | null>(() => {
   if (!target) return null;
 
   if (target.legKey !== undefined) {
-    const leg = legPaths.value[target.legKey];
+    const mid = project(0.5, target.legKey as 0 | 1, phase.value);
     const totalShare = bases.value.reduce((s, b) => s + b.share, 0);
     const mix =
       totalShare > 0 ? bases.value.map((b) => b.share / totalShare) : [];
@@ -642,18 +736,18 @@ const hudInfo = computed<HudInfo | null>(() => {
       mixLabels: bases.value.map((b) => b.label),
       mixKnown: mix.length > 0,
       status: null,
-      anchor: { x: leg.anchor[0], y: leg.anchor[1] },
+      anchor: { x: mid.x, y: mid.y },
     };
   }
 
-  const rung = allRungs.value.find((r) => r.i === target.rungIndex);
-  if (!rung || !rung.genre) return null;
-  const genre = rung.genre;
-  const rank = secondaryRank.value.get(genre.key) ?? 0;
+  const rung = field.rungs.find((r) => r.index === target.rungIndex);
+  const genre = rung ? pairs.value.get(rung.index) : undefined;
+  if (!rung || !genre) return null;
+  const a = project(rung.t, 0, phase.value);
+  const b = project(rung.t, 1, phase.value);
   const mix = baseMix(genre);
-  const mixKnown = mix.length > 0;
   return {
-    code: secondaryCode(rank),
+    code: secondaryCode(litRank.value.get(genre.key) ?? 0),
     title: genre.label,
     desc: $t("listening_genome.molecule.share_of_listening", {
       percent: formatPercent(genre.share),
@@ -661,89 +755,36 @@ const hudInfo = computed<HudInfo | null>(() => {
     }),
     mix,
     mixLabels: bases.value.map((b) => b.label),
-    mixKnown,
+    mixKnown: mix.length > 0,
     status: statusForRatio(genre.ratio),
-    anchor: { x: (rung.x1 + rung.x2) / 2, y: (rung.y1 + rung.y2) / 2 },
-  };
-});
-
-interface ActiveGlow {
-  kind: "rung" | "leg";
-  stroke: string;
-  x1?: number;
-  y1?: number;
-  x2?: number;
-  y2?: number;
-  points?: string;
-}
-const activeGlow = computed<ActiveGlow | null>(() => {
-  const target = active.value;
-  if (!target) return null;
-  if (target.legKey !== undefined) {
-    const leg = legPaths.value[target.legKey];
-    return {
-      kind: "leg",
-      points: leg.points,
-      stroke: hasBases.value ? "url(#genome-backbone-gradient)" : neutralColor,
-    };
-  }
-  const rung = allRungs.value.find((r) => r.i === target.rungIndex);
-  if (!rung || !rung.genre) return null;
-  return {
-    kind: "rung",
-    x1: rung.x1,
-    y1: rung.y1,
-    x2: rung.x2,
-    y2: rung.y2,
-    stroke: rung.strokeColor,
+    anchor: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
   };
 });
 
 const reticle = computed(() => (hudInfo.value ? hudInfo.value.anchor : null));
 
-// Two placements, chosen in CSS rather than by measuring anything in JS.
-//
-// Wide: the callout gets its own lane to the right of the plate. The plate's width is
-// derivable from the stage height alone (its aspect ratio is fixed), so the lane's left
-// edge is a pure calc() - no ResizeObserver, no layout read.
-//
-// Narrow (the `--narrow` rules below): there is no room for a lane, so the callout
-// overlays the plate exactly as it used to, flipping to the reticle's left when it would
-// otherwise run off the right edge.
 const PANEL_WIDTH_PCT = 46;
 const GAP_PCT = 5;
 
 const hudLeftPercent = computed(() => {
   if (!reticle.value) return 0;
-  const rx = (reticle.value.x / GEOM.w) * 100;
+  const rx = (reticle.value.x / HELIX_W) * 100;
   const right = rx + GAP_PCT;
   if (right + PANEL_WIDTH_PCT <= 100) return right;
   return Math.max(0, rx - GAP_PCT - PANEL_WIDTH_PCT);
 });
 const hudTopPercent = computed(() => {
   if (!reticle.value) return 0;
-  const ry = (reticle.value.y / GEOM.h) * 100;
-  return Math.max(1, ry - 5);
+  return Math.max(1, (reticle.value.y / HELIX_H) * 100 - 5);
 });
-
-// The callout's vertical position as a fraction of the plate's height, nudged up so the
-// panel's title sits level with the reticle rather than below it.
 const hudTopFraction = computed(() =>
-  reticle.value ? Math.max(0.01, reticle.value.y / GEOM.h - 0.06) : 0,
+  reticle.value ? Math.max(0.01, reticle.value.y / HELIX_H - 0.06) : 0,
 );
 
 const hudStyle = computed(() => ({
   "--hud-left-pct": `${hudLeftPercent.value}%`,
   "--hud-top-pct": `${hudTopPercent.value}%`,
   "--hud-top-fr": `${hudTopFraction.value}`,
-}));
-
-// Leader-line endpoint. In the wide layout the callout is outside the plate entirely, so
-// the line simply runs to the plate's edge and the panel picks it up from there; the SVG
-// keeps overflow: visible so the last few pixels are not clipped.
-const hudAnchor = computed(() => ({
-  x: GEOM.w + 12,
-  y: hudTopFraction.value * GEOM.h,
 }));
 
 const barMaskStyle = {
@@ -760,8 +801,9 @@ const barMaskStyle = {
 const hudBarGradient = computed(() => {
   if (!hudInfo.value || !hudInfo.value.mixKnown) return "";
   const stops = mixGradientStops(hudInfo.value.mix, (i) => baseColor(i, 58));
-  const seg = stops.map((s) => `${s.color} ${s.offsetPercent.toFixed(1)}%`);
-  return `linear-gradient(90deg, ${seg.join(",")})`;
+  return `linear-gradient(90deg, ${stops
+    .map((s) => `${s.color} ${s.offsetPercent.toFixed(1)}%`)
+    .join(",")})`;
 });
 
 const STATUS_COLORS: Record<
@@ -822,10 +864,10 @@ const legAriaLabel = computed(() =>
    as an empty margin with content stranded outside the box. */
 .genome-stage {
   /* cqi, not vw: the plate should scale with the CARD, which is what the container
-     query above establishes - the page has a sidebar, so vw would undersize it. */
+     query below establishes - the page has a sidebar, so vw would undersize it. */
   --stage-h: clamp(380px, 62cqi, 660px);
-  /* The plate's aspect ratio is fixed (540x700), so its rendered width follows from the
-     stage height - which is what lets the callout's lane be a plain calc(). */
+  /* The plate's aspect ratio is fixed, so its rendered width follows from the stage
+     height - which is what lets the callout's lane be a plain calc(). */
   --plate-w: calc(var(--stage-h) * 540 / 700);
   --stage-pad: 18px;
   --panel-w: clamp(170px, 22cqi, 240px);
@@ -836,8 +878,8 @@ const legAriaLabel = computed(() =>
   height: var(--stage-h);
   padding: var(--stage-pad);
   border-radius: 12px;
-  /* The plate is white particles on nothing, so the panel carries its own dark ground
-     rather than inheriting the theme's. */
+  /* The molecule is light on nothing, so the panel carries its own dark ground rather
+     than inheriting the theme's. */
   background: #07080a;
 }
 .genome-plate {
@@ -846,7 +888,7 @@ const legAriaLabel = computed(() =>
   height: 100%;
   aspect-ratio: 540 / 700;
 }
-.genome-plate__img,
+.genome-plate__canvas,
 .genome-plate__svg {
   position: absolute;
   inset: 0;
@@ -888,26 +930,6 @@ const legAriaLabel = computed(() =>
   color: #71757e;
 }
 
-.genome-tint {
-  transition:
-    opacity 0.16s ease,
-    stroke-width 0.16s ease;
-}
-.genome-halo {
-  mix-blend-mode: screen;
-  opacity: 0.5;
-  pointer-events: none;
-}
-.genome-glow {
-  mix-blend-mode: screen;
-  opacity: 0.85;
-  pointer-events: none;
-}
-.genome-plate__img {
-  /* Dimmed, because it is the unlit state. The tinted particles sit directly on top of
-     these same specks, so a bright base underneath would wash every colour out. */
-  opacity: 0.92;
-}
 .genome-hit {
   cursor: pointer;
 }
@@ -935,7 +957,6 @@ const legAriaLabel = computed(() =>
     calc(100% - 230px)
   );
 }
-
 .genome-hud__code {
   display: inline-block;
   margin-bottom: -1px;
@@ -1075,12 +1096,9 @@ const legAriaLabel = computed(() =>
   margin-top: 2px;
 }
 
-/* Narrow: no room for a callout lane, so the stage stacks and the callout goes back to
-   overlaying the plate, flipping sides when it would run off the right edge. */
 /* Narrow: no room for a callout lane. The stage stacks, and the callout stops floating
    entirely - it becomes a block under the molecule. Overlaying it on a small plate hid
-   the thing it was describing, and chasing the reticle horizontally inside a centred,
-   max-width plate is arithmetic with no payoff. The reticle still marks the spot. */
+   the thing it was describing. The reticle still marks the spot. */
 @container (max-width: 760px) {
   .genome-stage {
     --stage-h: auto;
