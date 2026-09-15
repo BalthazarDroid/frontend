@@ -1,0 +1,175 @@
+/*
+ * Listening Genome — panel theme.
+ *
+ * Everything here is scoped under `.genome-page`, so the rest of Music Assistant is
+ * untouched: this is one feature's aesthetic, not a change to the app's design language.
+ *
+ * The look is instrument panel rather than dashboard: hairline borders, corner ticks,
+ * uppercase tracked labels, tabular figures, and colour used only where it carries
+ * meaning. The molecule supplies the light; the panels around it should stay quiet.
+ *
+ * Chakra Petch (SIL Open Font License 1.1 — see assets/genome/fonts/OFL.txt) is bundled
+ * rather than fetched: Home Assistant runs on a local network and a panel that waits on
+ * fonts.googleapis.com is a panel that renders wrong when the internet is down. Subset to
+ * Latin, three weights, about 21KB in total.
+ */
+
+@font-face {
+  font-family: "Chakra Petch";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("@/assets/genome/fonts/ChakraPetch-Regular.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Chakra Petch";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("@/assets/genome/fonts/ChakraPetch-Medium.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Chakra Petch";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("@/assets/genome/fonts/ChakraPetch-SemiBold.woff2") format("woff2");
+}
+
+.genome-page {
+  --genome-display:
+    "Chakra Petch", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --genome-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* One accent, used sparingly: a live edge on whatever the reader is touching. */
+  --genome-accent: hsl(188 80% 58%);
+  --genome-panel-bg: rgba(255, 255, 255, 0.022);
+  --genome-panel-border: rgba(255, 255, 255, 0.1);
+  --genome-tick: rgba(255, 255, 255, 0.28);
+
+  font-family: var(--genome-display);
+  /* Slashed zero and tabular figures: these panels are full of numbers that should line
+     up column to column and never be mistaken for letters. */
+  font-feature-settings:
+    "tnum" 1,
+    "zero" 1;
+}
+
+/* A light theme would wash the whole conceit out - the molecule is light on darkness and
+   the panels are meant to read as backlit. So the page carries its own ground. */
+.genome-page {
+  --genome-ground: #0a0b0d;
+}
+
+.genome-page h1,
+.genome-page h2,
+.genome-page h3 {
+  font-family: var(--genome-display);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ---- panels ------------------------------------------------------------------ */
+
+/* Applied to every Card on the page. The corner ticks are the whole signature: four
+   short right-angles at the corners rather than a continuous heavy border, which reads
+   as machined without adding visual weight. */
+.genome-page .genome-panel-frame {
+  position: relative;
+  background: var(--genome-panel-bg);
+  border: 1px solid var(--genome-panel-border);
+  border-radius: 10px;
+  backdrop-filter: blur(6px);
+}
+.genome-page .genome-panel-frame::before,
+.genome-page .genome-panel-frame::after {
+  content: "";
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  pointer-events: none;
+  border-color: var(--genome-tick);
+  border-style: solid;
+}
+.genome-page .genome-panel-frame::before {
+  top: -1px;
+  left: -1px;
+  border-width: 1px 0 0 1px;
+  border-top-left-radius: 10px;
+}
+.genome-page .genome-panel-frame::after {
+  bottom: -1px;
+  right: -1px;
+  border-width: 0 1px 1px 0;
+  border-bottom-right-radius: 10px;
+}
+
+/* ---- typography inside panels -------------------------------------------------- */
+
+/* Card titles become instrument labels: small, uppercase, widely tracked, quiet. The
+   information is the number below, not the word above it. */
+.genome-page .genome-panel-frame [data-slot="card-title"] {
+  font-family: var(--genome-display);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: hsl(215 10% 62%);
+}
+.genome-page .genome-panel-frame [data-slot="card-description"] {
+  font-size: 11.5px;
+  letter-spacing: 0.01em;
+  color: hsl(215 8% 48%);
+}
+
+/* Any big figure on the page. Medium rather than bold: at this size weight reads as
+   shouting, and tracking does the work instead. */
+.genome-page .text-2xl {
+  font-family: var(--genome-display);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.genome-page .genome-code {
+  font: 600 9.5px/1 var(--genome-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: hsl(215 8% 48%);
+}
+
+/* ---- the header ----------------------------------------------------------------- */
+
+.genome-page .genome-title {
+  font-family: var(--genome-display);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+/* A hairline under the header, fading out to the right: it separates the title from the
+   instruments without drawing a box around anything. */
+.genome-page .genome-header-rule {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    var(--genome-tick),
+    rgba(255, 255, 255, 0.05) 42%,
+    transparent 78%
+  );
+}
+
+/* ---- chips ---------------------------------------------------------------------- */
+
+.genome-page .genome-chip {
+  font-family: var(--genome-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: hsl(215 12% 72%);
+  padding: 4px 9px;
+}

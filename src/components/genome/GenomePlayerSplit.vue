@@ -1,5 +1,5 @@
 <template>
-  <Card>
+  <Card class="genome-panel-frame">
     <CardHeader>
       <CardTitle>{{ $t("listening_genome.players") }}</CardTitle>
     </CardHeader>

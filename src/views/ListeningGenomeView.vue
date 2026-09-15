@@ -1,12 +1,10 @@
 <template>
-  <div class="space-y-6 p-4 md:p-6">
+  <div class="genome-page space-y-6 p-4 md:p-6">
     <header
       class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
     >
       <div>
-        <h1
-          class="inline-flex items-center text-2xl font-semibold tracking-tight"
-        >
+        <h1 class="genome-title inline-flex items-center text-2xl">
           <Dna class="mr-2 h-5 w-5" />
           {{ $t("listening_genome.title") }}
         </h1>
@@ -36,6 +34,7 @@
         </Button>
       </div>
     </header>
+    <div class="genome-header-rule" aria-hidden="true"></div>
 
     <template v-if="loading && !genome">
       <div class="space-y-6">
@@ -53,6 +52,9 @@
       <!-- Genre resolution runs as a paced background pass against MusicBrainz. Until it
            finishes, the genre breakdown - and therefore the divergence score - is provisional,
            and saying so is more honest than showing a confident number built on partial data. -->
+      <!-- Two different facts, so two different notices: work still in progress, and work
+           that could not be done. Folding failures into "still resolving" produced a
+           progress message that sat at "3 still to go" for days. -->
       <Alert v-if="genome.stats.artists_pending > 0" variant="default">
         <Loader2 class="size-4 animate-spin" />
         <AlertTitle>{{ $t("listening_genome.enriching_title") }}</AlertTitle>
@@ -61,6 +63,18 @@
             $t("listening_genome.enriching_body", {
               pending: genome.stats.artists_pending,
               resolved: genome.stats.artists_resolved,
+            })
+          }}
+        </AlertDescription>
+      </Alert>
+
+      <Alert v-else-if="genome.stats.artists_failed > 0" variant="default">
+        <TriangleAlert class="size-4" />
+        <AlertTitle>{{ $t("listening_genome.unresolved_title") }}</AlertTitle>
+        <AlertDescription>
+          {{
+            $t("listening_genome.unresolved_body", {
+              failed: genome.stats.artists_failed,
             })
           }}
         </AlertDescription>
@@ -124,6 +138,7 @@
 </template>
 
 <script setup lang="ts">
+import "@/styles/genome.css";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

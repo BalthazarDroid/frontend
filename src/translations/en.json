@@ -2601,6 +2601,8 @@
     "eclecticism": "Eclecticism",
     "eclecticism_tooltip": "The effective number of genres in your listening — the count you would have if your play time were spread evenly across that many. A library dominated by one genre scores near 1 however many genres it technically contains.",
     "eclecticism_vs_average": "vs {baseline} for the average listener",
-    "eclecticism_no_baseline": "No baseline to compare against yet"
+    "eclecticism_no_baseline": "No baseline to compare against yet",
+    "unresolved_title": "Some artists could not be identified",
+    "unresolved_body": "{failed} artist(s) failed to resolve against MusicBrainz and are no longer being retried on every pass. Their listening still counts; only their genre and era are missing."
   }
 }

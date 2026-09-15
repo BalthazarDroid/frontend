@@ -77,6 +77,8 @@ export interface GenomeStats {
   // import shows a genre breakdown (and therefore a divergence score) that is still firming
   // up. Surfaced so the page can say so rather than presenting a provisional score as final.
   artists_pending: number;
+  /** Artists whose lookup raised, as opposed to simply finding nothing. */
+  artists_failed: number;
   artists_resolved: number;
 }
 

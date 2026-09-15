@@ -1,9 +1,7 @@
 <template>
-  <Card class="overflow-hidden">
+  <Card class="genome-panel-frame overflow-hidden">
     <CardHeader>
-      <CardTitle
-        class="text-xs uppercase tracking-widest text-muted-foreground"
-      >
+      <CardTitle>
         {{ $t("listening_genome.molecule.title") }}
       </CardTitle>
       <CardDescription>
@@ -947,8 +945,10 @@ const legAriaLabel = computed(() =>
   border-radius: 8px;
 }
 .genome-panel__heading {
+  font-family: var(--genome-display);
+  font-weight: 600;
   font-size: 11px;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: #8f939d;
 }
@@ -1019,9 +1019,7 @@ const legAriaLabel = computed(() =>
   border-radius: 0 4px 4px 4px;
 }
 .genome-hud__title {
-  font:
-    700 12px/1.25 ui-sans-serif,
-    system-ui;
+  font: 600 12.5px/1.25 var(--genome-display);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #fff;

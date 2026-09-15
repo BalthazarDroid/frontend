@@ -3,7 +3,7 @@
     <Card :class="{ 'opacity-60': obscurity.known_share < 0.5 }">
       <CardContent class="space-y-1 py-4">
         <div class="flex items-center gap-1.5">
-          <span class="text-xs text-muted-foreground">
+          <span class="genome-code">
             {{ $t("listening_genome.obscurity") }}
           </span>
           <TooltipProvider :delay-duration="200">
@@ -23,19 +23,16 @@
         <div class="text-2xl font-semibold tabular-nums">
           {{ formatPercent(obscurity.index) }}
         </div>
-        <div
-          v-if="obscurity.known_share < 0.5"
-          class="text-xs text-muted-foreground"
-        >
+        <div v-if="obscurity.known_share < 0.5" class="genome-code">
           {{ $t("listening_genome.low_confidence") }}
         </div>
       </CardContent>
     </Card>
 
-    <Card>
+    <Card class="genome-panel-frame">
       <CardContent class="space-y-1 py-4">
         <div class="flex items-center gap-1.5">
-          <span class="text-xs text-muted-foreground">
+          <span class="genome-code">
             {{ $t("listening_genome.era_center") }}
           </span>
           <Tooltip>
@@ -53,16 +50,16 @@
         <div class="text-2xl font-semibold tabular-nums">
           {{ formatYear(era.center_of_mass) }}
         </div>
-        <div class="text-xs text-muted-foreground">
+        <div class="genome-code">
           ± {{ Math.round(era.spread) }} {{ $t("listening_genome.years") }}
         </div>
       </CardContent>
     </Card>
 
-    <Card>
+    <Card class="genome-panel-frame">
       <CardContent class="space-y-1 py-4">
         <div class="flex items-center gap-1.5">
-          <span class="text-xs text-muted-foreground">
+          <span class="genome-code">
             {{ $t("listening_genome.eclecticism") }}
           </span>
           <Tooltip>
@@ -80,7 +77,7 @@
         <div class="text-2xl font-semibold tabular-nums">
           {{ formatEffective(loyalty.effective_genres) }}
         </div>
-        <div class="text-xs text-muted-foreground">
+        <div class="genome-code">
           {{
             loyalty.baseline_effective_genres > 0
               ? $t("listening_genome.eclecticism_vs_average", {
