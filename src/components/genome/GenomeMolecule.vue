@@ -285,18 +285,36 @@ function mixHue(a: number, b: number, f: number): number {
 }
 
 /**
- * A rung's colour: the hue of the base it most belongs to, with saturation and lightness
- * scaled by how purely it belongs there. A genre split evenly across all four bases has
- * no business looking like a pure note of one of them.
+ * A rung's colour: all four base colours mixed, weighted by the genre's affinity to each.
+ *
+ * Averaging the hues numerically would be wrong (the average of cyan and orange is green,
+ * which is a base colour and means something else), and averaging RGB turns any even
+ * blend to mud. Instead each base is a VECTOR on the colour wheel - its own hue for
+ * direction, its share of the mix for length - and they are summed. Two useful properties
+ * fall out of that for free:
+ *
+ *   - the resultant angle is a true blend, so a genre split between cyan and magenta
+ *     lands on the violet between them, distinct from either;
+ *   - the resultant LENGTH is how lopsided the mix is. A genre that belongs equally to
+ *     all four cancels out to near zero and comes back almost colourless, which is the
+ *     honest answer: it has no particular allegiance.
  */
 function rungColor(mix: number[]): string {
   if (mix.length === 0) return DUST;
-  let best = 0;
-  for (let i = 1; i < mix.length; i++) if (mix[i] > mix[best]) best = i;
-  const purity = mix[best];
-  const hue = HUES[best % HUES.length];
-  return `hsl(${hue} ${Math.round(55 + 35 * purity)}% ${Math.round(
-    56 + 12 * purity,
+  const total = mix.reduce((sum, w) => sum + Math.max(0, w), 0);
+  if (total <= 0) return DUST;
+  let vx = 0;
+  let vy = 0;
+  mix.forEach((weight, i) => {
+    const angle = (HUES[i % HUES.length] * Math.PI) / 180;
+    const w = Math.max(0, weight) / total;
+    vx += w * Math.cos(angle);
+    vy += w * Math.sin(angle);
+  });
+  const hue = ((Math.atan2(vy, vx) * 180) / Math.PI + 360) % 360;
+  const purity = Math.min(1, Math.hypot(vx, vy));
+  return `hsl(${hue.toFixed(1)} ${Math.round(38 + 50 * purity)}% ${Math.round(
+    54 + 14 * purity,
   )}%)`;
 }
 
