@@ -299,7 +299,7 @@ function mixHue(a: number, b: number, f: number): number {
  *     all four cancels out to near zero and comes back almost colourless, which is the
  *     honest answer: it has no particular allegiance.
  */
-function rungColor(mix: number[]): string {
+function rungColor(mix: number[], muted = false): string {
   if (mix.length === 0) return DUST;
   const total = mix.reduce((sum, w) => sum + Math.max(0, w), 0);
   if (total <= 0) return DUST;
@@ -313,9 +313,13 @@ function rungColor(mix: number[]): string {
   });
   const hue = ((Math.atan2(vy, vx) * 180) / Math.PI + 360) % 360;
   const purity = Math.min(1, Math.hypot(vx, vy));
-  return `hsl(${hue.toFixed(1)} ${Math.round(38 + 50 * purity)}% ${Math.round(
-    54 + 14 * purity,
-  )}%)`;
+  // A rung that is not among the divergent six still shows its true hue, but drained of
+  // most of its saturation. That keeps the hierarchy doing the work: the six read as "in
+  // colour" and the rest as tinted structure, rather than twenty-six equal claims on the
+  // eye. Hue is preserved either way, so a muted rung is still recognisably itself.
+  const sat = (38 + 50 * purity) * (muted ? 0.42 : 1);
+  const light = (54 + 14 * purity) * (muted ? 0.88 : 1);
+  return `hsl(${hue.toFixed(1)} ${Math.round(sat)}% ${Math.round(light)}%)`;
 }
 
 // ---- data shaping ---------------------------------------------------------------
@@ -516,7 +520,10 @@ function draw(): void {
   for (const rung of field.rungs) {
     const genre = pairs.value.get(rung.index);
     const isLit = genre !== undefined && litKeys.value.has(genre.key);
-    const color = isLit && genre ? rungColor(baseMix(genre)) : DUST;
+    // Every paired rung carries its own colour, not just the lit six - a rung you can
+    // hover and read should look like something, and the mix is what it IS. The six stay
+    // dominant through brightness and their halo, not by being the only coloured thing.
+    const color = genre ? rungColor(baseMix(genre), !isLit) : DUST;
     const isActive = activeTarget?.rungIndex === rung.index;
     for (const q of rung.particles) {
       const a = project(rung.t, 0, p, 0, q.dRadius, q.dY);
@@ -534,9 +541,9 @@ function draw(): void {
         g,
         x,
         y,
-        q.size * (0.55 + 0.5 * depth) * (isActive ? 1.3 : 1),
+        q.size * (0.55 + 0.5 * depth) * (isActive ? 1.3 : isLit ? 1 : 0.85),
         color,
-        dgain * (isLit ? 0.92 : 0.26) * (isActive ? 1.7 : 1),
+        dgain * (isLit ? 0.92 : 0.3) * (isActive ? 1.7 : 1),
       );
     }
   }
