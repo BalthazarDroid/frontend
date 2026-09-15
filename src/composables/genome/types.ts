@@ -99,6 +99,8 @@ export interface EraFacts {
   spread: number;
   buckets: EraBucket[];
   known_share: number;
+  /** Share of known_share's weight that used an artist's begin year as a release-year proxy. */
+  artist_year_share: number;
 }
 
 export interface LoyaltyFacts {
@@ -107,6 +109,12 @@ export interface LoyaltyFacts {
   top_artist_share: number;
   new_artists_90d: number;
   repeat_rate: number;
+  /** Effective number of genres (exp of Shannon entropy) in the household's genre shares. */
+  effective_genres: number;
+  /** Effective number of artists (exp of Shannon entropy) in recency-weighted listening. */
+  effective_artists: number;
+  /** Effective number of genres in the baseline (average-listener) genre shares. */
+  baseline_effective_genres: number;
 }
 
 export interface GenomeResult {

@@ -339,9 +339,22 @@ const litRank = computed(() => {
   return map;
 });
 
-// Paired once, at phase zero. Pairing by a rung's CURRENT length would reshuffle the
-// genres every frame as the molecule turned, which is nonsense: a genre has a rung.
-const pairs = computed(() => pairRungsWithGenres(field.rungs, lit.value));
+// Every rung carries a genre, not just the lit six. The taxonomy has 59 genres, so a
+// real library fills all 26 comfortably - and a rung with nothing behind it is a rung
+// that cannot be hovered, which would leave two thirds of the molecule inert scenery.
+// The divergent six are simply the ones lit; the rest are there to be found.
+const ordered = computed(() => {
+  const litKeys = new Set(lit.value.map((g) => g.key));
+  const rest = secondary.value
+    .filter((g) => !litKeys.has(g.key))
+    .sort((a, b) => b.share - a.share);
+  return [...lit.value, ...rest];
+});
+// Paired once, at phase zero, longest rung first. Pairing by a rung's CURRENT length
+// would reshuffle the genres every frame as the molecule turned, which is nonsense: a
+// genre has a rung.
+const pairs = computed(() => pairRungsWithGenres(field.rungs, ordered.value));
+const litKeys = computed(() => new Set(lit.value.map((g) => g.key)));
 const bands = computed<Band[]>(() => backboneBands(props.bases));
 
 // ---- interaction state -----------------------------------------------------------
@@ -502,8 +515,8 @@ function draw(): void {
 
   for (const rung of field.rungs) {
     const genre = pairs.value.get(rung.index);
-    const isLit = genre !== undefined;
-    const color = genre ? rungColor(baseMix(genre)) : DUST;
+    const isLit = genre !== undefined && litKeys.value.has(genre.key);
+    const color = isLit && genre ? rungColor(baseMix(genre)) : DUST;
     const isActive = activeTarget?.rungIndex === rung.index;
     for (const q of rung.particles) {
       const a = project(rung.t, 0, p, 0, q.dRadius, q.dY);

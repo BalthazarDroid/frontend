@@ -2597,6 +2597,10 @@
       "rung_aria": "{label}, {percent} of listening, {status}",
       "leg_aria": "Backbone strand, blend of {count} base genres",
       "leg_aria_empty": "Backbone strand, not enough data yet to blend"
-    }
+    },
+    "eclecticism": "Eclecticism",
+    "eclecticism_tooltip": "The effective number of genres in your listening — the count you would have if your play time were spread evenly across that many. A library dominated by one genre scores near 1 however many genres it technically contains.",
+    "eclecticism_vs_average": "vs {baseline} for the average listener",
+    "eclecticism_no_baseline": "No baseline to compare against yet"
   }
 }

@@ -63,28 +63,30 @@
       <CardContent class="space-y-1 py-4">
         <div class="flex items-center gap-1.5">
           <span class="text-xs text-muted-foreground">
-            {{ $t("listening_genome.exploration") }}
+            {{ $t("listening_genome.eclecticism") }}
           </span>
           <Tooltip>
             <TooltipTrigger as-child>
               <Info
                 class="size-3.5 text-muted-foreground"
-                :aria-label="$t('listening_genome.exploration_tooltip')"
+                :aria-label="$t('listening_genome.eclecticism_tooltip')"
               />
             </TooltipTrigger>
             <TooltipContent>
-              {{ $t("listening_genome.exploration_tooltip") }}
+              {{ $t("listening_genome.eclecticism_tooltip") }}
             </TooltipContent>
           </Tooltip>
         </div>
         <div class="text-2xl font-semibold tabular-nums">
-          {{ formatPercent(loyalty.exploration_ratio) }}
+          {{ formatEffective(loyalty.effective_genres) }}
         </div>
         <div class="text-xs text-muted-foreground">
           {{
-            $t("listening_genome.new_artists", {
-              count: loyalty.new_artists_90d,
-            })
+            loyalty.baseline_effective_genres > 0
+              ? $t("listening_genome.eclecticism_vs_average", {
+                  baseline: formatEffective(loyalty.baseline_effective_genres),
+                })
+              : $t("listening_genome.eclecticism_no_baseline")
           }}
         </div>
       </CardContent>
@@ -93,6 +95,14 @@
 </template>
 
 <script setup lang="ts">
+/**
+ * The effective number of genres: "listens across the equivalent of N genres, evenly".
+ * One decimal, because the figure is a continuous measure and rounding 8.4 to 8 throws
+ * away the only thing that distinguishes two libraries of similar breadth.
+ */
+function formatEffective(value: number): string {
+  return value.toFixed(1);
+}
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Tooltip,
