@@ -2603,6 +2603,12 @@
     "eclecticism_vs_average": "vs {baseline} for the average listener",
     "eclecticism_no_baseline": "No baseline to compare against yet",
     "unresolved_title": "Some artists could not be identified",
-    "unresolved_body": "{failed} artist(s) failed to resolve against MusicBrainz and are no longer being retried on every pass. Their listening still counts; only their genre and era are missing."
+    "unresolved_body": "{failed} artist(s) failed to resolve against MusicBrainz and are no longer being retried on every pass. Their listening still counts; only their genre and era are missing.",
+    "unresolved_show": "Show which ones",
+    "unresolved_dialog_hint": "These artists' names could not be matched against MusicBrainz. Their plays still count toward your totals; only their genre and era are missing.",
+    "attempted_recently": "just tried",
+    "attempted_hours": "{hours}h ago",
+    "attempted_days": "{days}d ago",
+    "loading": "Loading…"
   }
 }

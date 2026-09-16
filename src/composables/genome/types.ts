@@ -35,6 +35,13 @@ export interface ArtistFact {
   genres: string[];
 }
 
+/** A single row in the `genome/unresolved_artists` result. */
+export interface FailedArtist {
+  artist_key: string;
+  artist_name: string;
+  resolved_at: number;
+}
+
 export interface TrackFact {
   name: string;
   artist: string;

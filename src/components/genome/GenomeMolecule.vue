@@ -50,9 +50,9 @@
                 <circle :cx="reticle.x" :cy="reticle.y" r="1.8" fill="#fff" />
                 <line
                   class="genome-leader"
-                  :x1="reticle.x + 13"
+                  :x1="reticle.x - 13"
                   :y1="reticle.y"
-                  :x2="HELIX_W + 12"
+                  :x2="-12"
                   :y2="hudTopFraction * HELIX_H + 24"
                   stroke="#fff"
                   stroke-width="1"
@@ -255,7 +255,13 @@ const props = withDefaults(
 
 // Fixed hues for up to 4 bases - a purely presentational palette, not tied to genre
 // identity, so it's stable regardless of which genres occupy the slots.
-const HUES = [188, 288, 146, 30];
+// Evenly spaced, 90 degrees apart, and that spacing is the whole point. The first
+// palette used 188/288/146/30, where cyan and green sit only 42 degrees apart: any mix
+// touching both reinforced along that arc, and 53% of blends came back somewhere in the
+// green-to-cyan band regardless of the genre's actual character. With equal spacing no
+// pair reinforces more than any other, and a genre with no real allegiance cancels toward
+// grey instead of drifting teal.
+const HUES = [190, 280, 10, 100];
 function baseColor(index: number, lightness = 62, saturation = 82): string {
   return `hsl(${HUES[index % HUES.length]} ${saturation}% ${lightness}%)`;
 }
@@ -335,9 +341,12 @@ const field: ParticleField = buildField();
 const secondary = computed(() => secondaryGenres(props.genres, props.bases));
 /** The lit rungs: the genres that account for most of the household's divergence. */
 const lit = computed(() => mostDivergent(secondary.value, LIT_RUNGS));
-const litRank = computed(() => {
+// Every secondary genre's position, lit or not. The callout code used `litRank`, which
+// only knows the six lit genres, so every other rung fell through to its `?? 0` default
+// and announced itself as GEN-01.
+const orderedRank = computed(() => {
   const map = new Map<string, number>();
-  lit.value.forEach((g, i) => map.set(g.key, i));
+  ordered.value.forEach((g, i) => map.set(g.key, i));
   return map;
 });
 
@@ -783,7 +792,7 @@ const hudInfo = computed<HudInfo | null>(() => {
   const b = project(rung.t, 1, phase.value);
   const mix = baseMix(genre);
   return {
-    code: secondaryCode(litRank.value.get(genre.key) ?? 0),
+    code: secondaryCode(orderedRank.value.get(genre.key) ?? 0),
     title: genre.label,
     desc: $t("listening_genome.molecule.share_of_listening", {
       percent: formatPercent(genre.share),
@@ -799,27 +808,11 @@ const hudInfo = computed<HudInfo | null>(() => {
 
 const reticle = computed(() => (hudInfo.value ? hudInfo.value.anchor : null));
 
-const PANEL_WIDTH_PCT = 46;
-const GAP_PCT = 5;
-
-const hudLeftPercent = computed(() => {
-  if (!reticle.value) return 0;
-  const rx = (reticle.value.x / HELIX_W) * 100;
-  const right = rx + GAP_PCT;
-  if (right + PANEL_WIDTH_PCT <= 100) return right;
-  return Math.max(0, rx - GAP_PCT - PANEL_WIDTH_PCT);
-});
-const hudTopPercent = computed(() => {
-  if (!reticle.value) return 0;
-  return Math.max(1, (reticle.value.y / HELIX_H) * 100 - 5);
-});
 const hudTopFraction = computed(() =>
   reticle.value ? Math.max(0.01, reticle.value.y / HELIX_H - 0.06) : 0,
 );
 
 const hudStyle = computed(() => ({
-  "--hud-left-pct": `${hudLeftPercent.value}%`,
-  "--hud-top-pct": `${hudTopPercent.value}%`,
   "--hud-top-fr": `${hudTopFraction.value}`,
 }));
 
@@ -903,24 +896,29 @@ const legAriaLabel = computed(() =>
      query below establishes - the page has a sidebar, so vw would undersize it. */
   --stage-h: clamp(380px, 62cqi, 660px);
   /* The plate's aspect ratio is fixed, so its rendered width follows from the stage
-     height - which is what lets the callout's lane be a plain calc(). */
+     height - which is what lets the callout lanes be plain calc(). */
   --plate-w: calc(var(--stage-h) * 540 / 700);
   --stage-pad: 18px;
-  --panel-w: clamp(170px, 22cqi, 240px);
+  --panel-w: clamp(170px, 20cqi, 230px);
+  --lane-gap: 22px;
   position: relative;
-  display: flex;
+  /* Three columns: a callout lane, the molecule, a callout lane. The molecule sits in
+     the middle of the card rather than hard left, and the space on both sides is a place
+     for information rather than margin. Which lane the callout uses depends on which
+     side of the axis the reticle is on, so the leader line never crosses the molecule. */
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: stretch;
-  gap: 20px;
   height: var(--stage-h);
   padding: var(--stage-pad);
-  border-radius: 12px;
-  /* The molecule is light on nothing, so the panel carries its own dark ground rather
-     than inheriting the theme's. */
-  background: #07080a;
+  border-radius: 10px;
+  /* The molecule is light on darkness, so the panel carries its own ground rather than
+     inheriting the theme's. */
+  background: #06070a;
 }
 .genome-plate {
   position: relative;
-  flex: 0 0 auto;
+  grid-column: 2;
   height: 100%;
   aspect-ratio: 540 / 700;
 }
@@ -936,16 +934,17 @@ const legAriaLabel = computed(() =>
 }
 
 .genome-panel {
-  flex: 0 0 var(--panel-w);
-  margin-left: auto;
-  align-self: flex-start;
+  grid-column: 3;
+  justify-self: end;
+  width: var(--panel-w);
+  align-self: start;
   padding: 14px 15px 13px;
   background: rgba(255, 255, 255, 0.035);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
 }
 .genome-panel__heading {
-  font-family: var(--genome-display);
+  font-family: var(--genome-text);
   font-weight: 600;
   font-size: 11px;
   letter-spacing: 0.2em;
@@ -983,18 +982,28 @@ const legAriaLabel = computed(() =>
   position: absolute;
   pointer-events: none;
   z-index: 8;
-  /* Wide layout: its own lane between the plate and the base-pair panel, tracking the
-     reticle vertically. Bounding it on BOTH sides is what keeps it from sliding under
-     the panel as the card narrows - a fixed width could not know where the lane ends. */
-  left: calc(var(--stage-pad) + var(--plate-w) + 20px);
-  right: calc(var(--stage-pad) + var(--panel-w) + 20px);
-  width: auto;
-  max-width: 320px;
+  width: clamp(190px, 22cqi, 290px);
   top: min(
     calc(var(--stage-pad) + var(--hud-top-fr) * var(--stage-h)),
     calc(100% - 230px)
   );
 }
+/* The left lane, always. Choosing a side from the reticle looked appealing but is
+   degenerate: a rung spans both strands, so its midpoint sits on the axis whichever rung
+   it is, and the callout would have flipped on noise. A fixed side also means the panel
+   never moves between two rungs, which matters more than symmetry. */
+.genome-hud {
+  right: calc(50% + var(--plate-w) / 2 + var(--lane-gap));
+}
+/* The code tab sits at the panel's top-right now that the callout is in the left lane,
+   so it points back toward the molecule. Floating it collapsed the tab out of flow. */
+.genome-hud__code {
+  display: block;
+  width: fit-content;
+  margin-left: auto;
+  border-radius: 4px 4px 0 0;
+}
+
 .genome-hud__code {
   display: inline-block;
   margin-bottom: -1px;
@@ -1020,11 +1029,12 @@ const legAriaLabel = computed(() =>
 }
 .genome-hud__title {
   font: 600 12.5px/1.25 var(--genome-display);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #fff;
 }
 .genome-hud__desc {
+  font-family: var(--genome-text);
   font-size: 11px;
   color: #8f939d;
   margin-top: 3px;
@@ -1135,11 +1145,16 @@ const legAriaLabel = computed(() =>
 /* Narrow: no room for a callout lane. The stage stacks, and the callout stops floating
    entirely - it becomes a block under the molecule. Overlaying it on a small plate hid
    the thing it was describing. The reticle still marks the spot. */
-@container (max-width: 760px) {
+/* Narrow: no room for a lane either side. One column, and the callout stops floating
+   entirely - it becomes a block under the molecule. Overlaying it on a small plate hid
+   the thing it was describing. The reticle still marks the spot. */
+@container (max-width: 860px) {
   .genome-stage {
     --stage-h: auto;
+    display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 18px;
     height: auto;
   }
   .genome-plate {
@@ -1153,14 +1168,17 @@ const legAriaLabel = computed(() =>
     position: static;
     width: 100%;
     max-width: 420px;
+    left: auto;
     right: auto;
+  }
+  .genome-hud__code {
+    margin-left: 0;
   }
   .genome-panel {
     order: 3;
-    flex: 0 0 auto;
     width: 100%;
     max-width: 420px;
-    margin-left: 0;
+    justify-self: stretch;
   }
   .genome-leader {
     display: none;

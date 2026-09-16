@@ -8,37 +8,60 @@
  * uppercase tracked labels, tabular figures, and colour used only where it carries
  * meaning. The molecule supplies the light; the panels around it should stay quiet.
  *
- * Chakra Petch (SIL Open Font License 1.1 — see assets/genome/fonts/OFL.txt) is bundled
- * rather than fetched: Home Assistant runs on a local network and a panel that waits on
- * fonts.googleapis.com is a panel that renders wrong when the internet is down. Subset to
- * Latin, three weights, about 21KB in total.
+ * TWO faces, because one face cannot do both jobs here:
+ *   - Syncopate (Apache 2.0) for titles and the hero figures. Wide, thin and unusual -
+ *     it is the page's voice. Its lowercase reads almost as small caps, which is exactly
+ *     why it must never carry a sentence.
+ *   - Jura (SIL OFL 1.1) for everything a person actually reads. Thin and geometric
+ *     enough to belong beside Syncopate, with real lowercase that survives 11px.
+ * Licences ship alongside the files in assets/genome/fonts/.
+ *
+ * Both are bundled rather than fetched: Home Assistant runs on a local network, and a
+ * panel that waits on fonts.googleapis.com is a panel that renders wrong when the
+ * internet is down. Subset to Latin; about 58KB for all five faces.
  */
 
 @font-face {
-  font-family: "Chakra Petch";
+  font-family: "Syncopate";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("@/assets/genome/fonts/ChakraPetch-Regular.woff2") format("woff2");
+  src: url("@/assets/genome/fonts/Syncopate-Regular.woff2") format("woff2");
 }
 @font-face {
-  font-family: "Chakra Petch";
+  font-family: "Syncopate";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("@/assets/genome/fonts/Syncopate-Bold.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Jura";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("@/assets/genome/fonts/Jura-Light.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Jura";
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url("@/assets/genome/fonts/ChakraPetch-Medium.woff2") format("woff2");
+  src: url("@/assets/genome/fonts/Jura-Medium.woff2") format("woff2");
 }
 @font-face {
-  font-family: "Chakra Petch";
+  font-family: "Jura";
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url("@/assets/genome/fonts/ChakraPetch-SemiBold.woff2") format("woff2");
+  src: url("@/assets/genome/fonts/Jura-SemiBold.woff2") format("woff2");
 }
 
 .genome-page {
-  --genome-display:
-    "Chakra Petch", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  /* Titles and hero figures only. Never a sentence. */
+  --genome-display: "Syncopate", ui-sans-serif, system-ui, sans-serif;
+  /* Everything anyone reads. */
+  --genome-text: "Jura", ui-sans-serif, system-ui, sans-serif;
   --genome-mono:
     ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 
@@ -48,7 +71,7 @@
   --genome-panel-border: rgba(255, 255, 255, 0.1);
   --genome-tick: rgba(255, 255, 255, 0.28);
 
-  font-family: var(--genome-display);
+  font-family: var(--genome-text);
   /* Slashed zero and tabular figures: these panels are full of numbers that should line
      up column to column and never be mistaken for letters. */
   font-feature-settings:
@@ -63,11 +86,15 @@
 }
 
 .genome-page h1,
-.genome-page h2,
-.genome-page h3 {
+.genome-page h2 {
   font-family: var(--genome-display);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+.genome-page h3 {
+  font-family: var(--genome-text);
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.1em;
 }
 
 /* ---- panels ------------------------------------------------------------------ */
@@ -111,14 +138,18 @@
    information is the number below, not the word above it. */
 .genome-page .genome-panel-frame [data-slot="card-title"] {
   font-family: var(--genome-display);
-  font-weight: 600;
-  font-size: 11px;
-  letter-spacing: 0.2em;
+  font-weight: 400;
+  font-size: 10px;
+  /* Syncopate is a very wide face, so the generous tracking a narrower one needs would
+     push a two-word label onto a second line inside a stat tile. */
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: hsl(215 10% 62%);
 }
 .genome-page .genome-panel-frame [data-slot="card-description"] {
-  font-size: 11.5px;
+  font-family: var(--genome-text);
+  font-weight: 400;
+  font-size: 12px;
   letter-spacing: 0.01em;
   color: hsl(215 8% 48%);
 }
@@ -127,8 +158,8 @@
    shouting, and tracking does the work instead. */
 .genome-page .text-2xl {
   font-family: var(--genome-display);
-  font-weight: 500;
-  letter-spacing: 0.01em;
+  font-weight: 400;
+  letter-spacing: 0.005em;
   font-variant-numeric: tabular-nums;
 }
 
@@ -143,8 +174,8 @@
 
 .genome-page .genome-title {
   font-family: var(--genome-display);
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  font-weight: 400;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 /* A hairline under the header, fading out to the right: it separates the title from the
@@ -172,4 +203,45 @@
   background: rgba(255, 255, 255, 0.04);
   color: hsl(215 12% 72%);
   padding: 4px 9px;
+}
+
+/* ---- unresolved-artist dialog ---------------------------------------------------- */
+
+.genome-unresolved {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 46vh;
+  overflow-y: auto;
+  margin-top: 4px;
+}
+.genome-unresolved li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 2px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.genome-unresolved__name {
+  font-family: var(--genome-text);
+  font-size: 13px;
+  color: #e7e9ee;
+}
+
+/* Popups are rendered in a portal at the end of <body>, outside `.genome-page` - so the
+   theme has to be applied to them directly or they fall back to the app's default face.
+   Each popup root carries `genome-page` for exactly this reason. */
+.genome-page [data-slot="dialog-title"],
+.genome-page [data-slot="alert-title"] {
+  font-family: var(--genome-display);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+.genome-page [data-slot="dialog-description"],
+.genome-page [data-slot="alert-description"],
+.genome-page [data-slot="tooltip-content"] {
+  font-family: var(--genome-text);
 }

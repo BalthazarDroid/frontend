@@ -14,7 +14,7 @@
                   :aria-label="$t('listening_genome.obscurity_tooltip')"
                 />
               </TooltipTrigger>
-              <TooltipContent>
+              <TooltipContent class="genome-page">
                 {{ $t("listening_genome.obscurity_tooltip") }}
               </TooltipContent>
             </Tooltip>
@@ -42,7 +42,7 @@
                 :aria-label="$t('listening_genome.era_center_tooltip')"
               />
             </TooltipTrigger>
-            <TooltipContent>
+            <TooltipContent class="genome-page">
               {{ $t("listening_genome.era_center_tooltip") }}
             </TooltipContent>
           </Tooltip>
@@ -69,7 +69,7 @@
                 :aria-label="$t('listening_genome.eclecticism_tooltip')"
               />
             </TooltipTrigger>
-            <TooltipContent>
+            <TooltipContent class="genome-page">
               {{ $t("listening_genome.eclecticism_tooltip") }}
             </TooltipContent>
           </Tooltip>

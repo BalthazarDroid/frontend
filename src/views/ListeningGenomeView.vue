@@ -77,6 +77,44 @@
               failed: genome.stats.artists_failed,
             })
           }}
+          <Dialog>
+            <DialogTrigger as-child>
+              <Button
+                variant="link"
+                size="sm"
+                class="h-auto p-0 text-xs"
+                @click="loadUnresolved"
+              >
+                {{ $t("listening_genome.unresolved_show") }}
+              </Button>
+            </DialogTrigger>
+            <DialogScrollContent class="genome-page max-w-md">
+              <DialogHeader>
+                <DialogTitle>
+                  {{ $t("listening_genome.unresolved_title") }}
+                </DialogTitle>
+                <DialogDescription>
+                  {{ $t("listening_genome.unresolved_dialog_hint") }}
+                </DialogDescription>
+              </DialogHeader>
+              <p
+                v-if="unresolvedLoading"
+                class="py-4 text-sm text-muted-foreground"
+              >
+                {{ $t("listening_genome.loading") }}
+              </p>
+              <ul v-else class="genome-unresolved">
+                <li v-for="a in unresolved" :key="a.artist_key">
+                  <span class="genome-unresolved__name">{{
+                    a.artist_name
+                  }}</span>
+                  <span class="genome-code">{{
+                    formatAttempt(a.resolved_at)
+                  }}</span>
+                </li>
+              </ul>
+            </DialogScrollContent>
+          </Dialog>
         </AlertDescription>
       </Alert>
 
@@ -139,6 +177,14 @@
 
 <script setup lang="ts">
 import "@/styles/genome.css";
+import {
+  Dialog,
+  DialogDescription,
+  DialogHeader,
+  DialogScrollContent,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -149,14 +195,46 @@ import GenomePlayerSplit from "@/components/genome/GenomePlayerSplit.vue";
 import GenomeRhythmHeatmap from "@/components/genome/GenomeRhythmHeatmap.vue";
 import GenomeStatTiles from "@/components/genome/GenomeStatTiles.vue";
 import GenomeTopLists from "@/components/genome/GenomeTopLists.vue";
+import { api } from "@/plugins/api";
+import type { FailedArtist } from "@/composables/genome/types";
 import { useGenome } from "@/composables/genome/useGenome";
 import { formatPlays, formatRatio } from "@/helpers/genome_format";
 import { $t } from "@/plugins/i18n";
-import { Dna, Loader2, RefreshCw, Settings } from "@lucide/vue";
-import { onMounted } from "vue";
+import { Dna, Loader2, RefreshCw, Settings, TriangleAlert } from "@lucide/vue";
+import { onMounted, ref } from "vue";
 import { RouterLink } from "vue-router";
 
 const { genome, loading, load, rebuild } = useGenome();
+
+// Fetched on demand rather than folded into the genome payload: it is a diagnostic a
+// person opens once when something looks wrong, not part of the profile.
+const unresolved = ref<FailedArtist[]>([]);
+const unresolvedLoading = ref(false);
+
+async function loadUnresolved(): Promise<void> {
+  unresolvedLoading.value = true;
+  try {
+    unresolved.value = await api.sendCommand<FailedArtist[]>(
+      "genome/unresolved_artists",
+      { limit: 100 },
+    );
+  } catch {
+    unresolved.value = [];
+  } finally {
+    unresolvedLoading.value = false;
+  }
+}
+
+/** "last tried 4 hours ago" - the absolute timestamp means nothing to a reader here. */
+function formatAttempt(seconds: number): string {
+  if (!seconds) return "";
+  const hours = Math.max(0, Math.round((Date.now() / 1000 - seconds) / 3600));
+  if (hours < 1) return $t("listening_genome.attempted_recently");
+  if (hours < 48) return $t("listening_genome.attempted_hours", { hours });
+  return $t("listening_genome.attempted_days", {
+    days: Math.round(hours / 24),
+  });
+}
 
 onMounted(() => {
   load();
