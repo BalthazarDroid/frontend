@@ -7,8 +7,10 @@ import {
   maxRhythmShare,
   rhythmCellOpacity,
   rhythmGridLookup,
+  showResolvingNotice,
+  showUnresolvedNotice,
 } from "./genome_format";
-import type { RhythmCell } from "@/composables/genome/types";
+import type { GenomeStats, RhythmCell } from "@/composables/genome/types";
 
 describe("formatPercent", () => {
   it("rounds a 0..1 score to a whole percent", () => {
@@ -85,5 +87,67 @@ describe("rhythmCellOpacity", () => {
 
   it("floors everything at 0.06 when the whole grid is empty", () => {
     expect(rhythmCellOpacity(0, 0)).toBe(0.06);
+  });
+});
+
+describe("which notice is on screen", () => {
+  const stats = (over: Partial<GenomeStats> = {}): GenomeStats =>
+    ({
+      total_listens: 100,
+      distinct_artists: 10,
+      distinct_tracks: 20,
+      artists_pending: 0,
+      artists_failed: 0,
+      artists_resolved: 10,
+      unresolved_dismissed: false,
+      ...over,
+    }) as GenomeStats;
+
+  it("shows the resolving notice only while work is outstanding", () => {
+    expect(showResolvingNotice(stats({ artists_pending: 3 }))).toBe(true);
+    expect(showResolvingNotice(stats())).toBe(false);
+  });
+
+  it("shows the unresolved notice when artists failed and nothing was dismissed", () => {
+    expect(showUnresolvedNotice(stats({ artists_failed: 2 }))).toBe(true);
+  });
+
+  /**
+   * The bug this pair exists for.
+   *
+   * Dismiss called the server, the server recorded a fingerprint of the failing artists and
+   * reported it back, the view reloaded - and the notice returned, because the only thing the
+   * template checked was `artists_failed`. Every part of the chain worked except reading the
+   * answer, so the button appeared to do nothing at all.
+   */
+  it("hides the unresolved notice once it has been dismissed", () => {
+    expect(
+      showUnresolvedNotice(
+        stats({ artists_failed: 2, unresolved_dismissed: true }),
+      ),
+    ).toBe(false);
+  });
+
+  /**
+   * Dismissal is per failing-artist-set, not forever. The server clears the flag when a
+   * different artist starts failing, and the notice has to come back when it does.
+   */
+  it("shows it again when the server reports the dismissal no longer covers the failures", () => {
+    expect(
+      showUnresolvedNotice(
+        stats({ artists_failed: 5, unresolved_dismissed: false }),
+      ),
+    ).toBe(true);
+  });
+
+  it("says nothing about failures while resolving is still in progress", () => {
+    expect(
+      showUnresolvedNotice(stats({ artists_pending: 1, artists_failed: 2 })),
+    ).toBe(false);
+  });
+
+  it("shows neither when there is nothing to report", () => {
+    expect(showResolvingNotice(stats())).toBe(false);
+    expect(showUnresolvedNotice(stats())).toBe(false);
   });
 });

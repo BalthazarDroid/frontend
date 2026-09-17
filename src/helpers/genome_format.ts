@@ -1,4 +1,4 @@
-import type { RhythmCell } from "@/composables/genome/types";
+import type { GenomeStats, RhythmCell } from "@/composables/genome/types";
 
 /**
  * Pure formatting helpers for the Listening Genome page (docs/ARCHITECTURE.md
@@ -53,4 +53,31 @@ export function rhythmCellOpacity(share: number, maxShare: number): number {
 /** "1974.3" -> "1974" for the era center-of-mass tile (whole year display). */
 export function formatYear(year: number): string {
   return Math.round(year).toString();
+}
+
+/**
+ * Whether the "genres still resolving" notice belongs on screen.
+ *
+ * :param stats: The genome's stats block.
+ */
+export function showResolvingNotice(stats: GenomeStats): boolean {
+  return stats.artists_pending > 0;
+}
+
+/**
+ * Whether the "some artists could not be identified" notice belongs on screen.
+ *
+ * Dismissing is the second half of this and was missing: the server records a fingerprint of
+ * the artists currently failing and reports it back as `unresolved_dismissed`, but the view
+ * only ever checked `artists_failed`, so Dismiss wrote the dismissal, reloaded, and the notice
+ * came straight back. The whole chain worked except the one place that had to read the answer.
+ *
+ * Both rules live here rather than inside a `v-if` so they can be tested at all - a template
+ * expression is precisely the kind of path nothing walks until a user finds it.
+ *
+ * :param stats: The genome's stats block.
+ */
+export function showUnresolvedNotice(stats: GenomeStats): boolean {
+  if (showResolvingNotice(stats)) return false;
+  return stats.artists_failed > 0 && !stats.unresolved_dismissed;
 }

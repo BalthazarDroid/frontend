@@ -56,7 +56,7 @@
            that could not be done. Folding failures into "still resolving" produced a
            progress message that sat at "3 still to go" for days. -->
       <Alert
-        v-if="genome.stats.artists_pending > 0"
+        v-if="showResolvingNotice(genome.stats)"
         variant="default"
         class="genome-panel-frame"
       >
@@ -73,7 +73,7 @@
       </Alert>
 
       <Alert
-        v-else-if="genome.stats.artists_failed > 0"
+        v-else-if="showUnresolvedNotice(genome.stats)"
         variant="default"
         class="genome-panel-frame"
       >
@@ -234,7 +234,12 @@ import { api } from "@/plugins/api";
 import { toast } from "vue-sonner";
 import type { FailedArtist } from "@/composables/genome/types";
 import { useGenome } from "@/composables/genome/useGenome";
-import { formatPlays, formatRatio } from "@/helpers/genome_format";
+import {
+  formatPlays,
+  formatRatio,
+  showResolvingNotice,
+  showUnresolvedNotice,
+} from "@/helpers/genome_format";
 import { $t } from "@/plugins/i18n";
 import { Dna, Loader2, RefreshCw, Settings, TriangleAlert } from "@lucide/vue";
 import { onMounted, ref } from "vue";
