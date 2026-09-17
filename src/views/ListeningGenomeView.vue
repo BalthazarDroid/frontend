@@ -103,7 +103,10 @@
               >
                 {{ $t("listening_genome.loading") }}
               </p>
-              <ul v-else class="genome-unresolved">
+              <p class="genome-unresolved__advice">
+                {{ $t("listening_genome.unresolved_what_to_do") }}
+              </p>
+              <ul v-if="!unresolvedLoading" class="genome-unresolved">
                 <li v-for="a in unresolved" :key="a.artist_key">
                   <span class="genome-unresolved__name">{{
                     a.artist_name
@@ -113,6 +116,23 @@
                   }}</span>
                 </li>
               </ul>
+              <DialogFooter class="genome-unresolved__actions">
+                <span class="genome-unresolved__hint">
+                  {{ $t("listening_genome.unresolved_dismiss_hint") }}
+                </span>
+                <div class="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    @click="dismissUnresolved"
+                  >
+                    {{ $t("listening_genome.unresolved_dismiss") }}
+                  </Button>
+                  <Button size="sm" @click="retryUnresolved">
+                    {{ $t("listening_genome.unresolved_retry") }}
+                  </Button>
+                </div>
+              </DialogFooter>
             </DialogScrollContent>
           </Dialog>
         </AlertDescription>
@@ -180,6 +200,7 @@ import "@/styles/genome.css";
 import {
   Dialog,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogScrollContent,
   DialogTitle,
@@ -196,6 +217,7 @@ import GenomeRhythmHeatmap from "@/components/genome/GenomeRhythmHeatmap.vue";
 import GenomeStatTiles from "@/components/genome/GenomeStatTiles.vue";
 import GenomeTopLists from "@/components/genome/GenomeTopLists.vue";
 import { api } from "@/plugins/api";
+import { toast } from "vue-sonner";
 import type { FailedArtist } from "@/composables/genome/types";
 import { useGenome } from "@/composables/genome/useGenome";
 import { formatPlays, formatRatio } from "@/helpers/genome_format";
@@ -223,6 +245,17 @@ async function loadUnresolved(): Promise<void> {
   } finally {
     unresolvedLoading.value = false;
   }
+}
+
+async function retryUnresolved(): Promise<void> {
+  await api.sendCommand("genome/retry_artists", {});
+  toast.success($t("listening_genome.unresolved_retried"));
+  await load(true);
+}
+
+async function dismissUnresolved(): Promise<void> {
+  await api.sendCommand("genome/dismiss_unresolved", {});
+  await load(true);
 }
 
 /** "last tried 4 hours ago" - the absolute timestamp means nothing to a reader here. */

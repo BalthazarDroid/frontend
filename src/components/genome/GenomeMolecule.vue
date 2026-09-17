@@ -180,6 +180,40 @@
             <p class="genome-panel__foot">
               {{ $t("listening_genome.molecule.backbone_explainer") }}
             </p>
+
+            <Popover>
+              <PopoverTrigger as-child>
+                <button type="button" class="genome-legend-trigger">
+                  {{ $t("listening_genome.molecule.legend_heading") }}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent class="genome-page w-72" side="top">
+                <div class="genome-legend">
+                  <p
+                    v-for="key in [
+                      'overexpressed',
+                      'stable',
+                      'underexpressed',
+                    ] as ExpressionStatus[]"
+                    :key="key"
+                    class="genome-legend__row"
+                  >
+                    <span
+                      class="genome-legend__swatch"
+                      :style="{ background: statusStyle(key).c }"
+                    ></span>
+                    <span>{{
+                      $t(
+                        `listening_genome.molecule.legend_${key === "overexpressed" ? "over" : key === "stable" ? "stable" : "under"}`,
+                      )
+                    }}</span>
+                  </p>
+                  <p class="genome-legend__note">
+                    {{ $t("listening_genome.molecule.legend_note") }}
+                  </p>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
@@ -199,12 +233,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import type { GenreShare } from "@/composables/genome/types";
 import {
   backboneBands,
   bandAt,
   buildField,
   distanceToSegment,
+  GENOME_RADIANS_PER_SECOND,
   HELIX_H,
   HELIX_W,
   LIT_RUNGS,
@@ -397,9 +437,7 @@ const active = computed<ActiveTarget | null>(
 
 // ---- the clock -------------------------------------------------------------------
 
-// One revolution takes a little over three minutes. Slow enough to read as drift rather
-// than motion, which is the only speed tolerable on a page left open.
-const RADIANS_PER_SECOND = 0.032;
+const RADIANS_PER_SECOND = GENOME_RADIANS_PER_SECOND;
 
 const phase = ref(0);
 const prefersReducedMotion =
@@ -935,7 +973,10 @@ const legAriaLabel = computed(() =>
 
 .genome-panel {
   grid-column: 3;
-  justify-self: end;
+  /* Nearer the molecule than the card's edge: pinned to the far right it read as a
+     separate sidebar rather than a legend belonging to the thing beside it. */
+  justify-self: start;
+  margin-left: var(--lane-gap);
   width: var(--panel-w);
   align-self: start;
   padding: 14px 15px 13px;

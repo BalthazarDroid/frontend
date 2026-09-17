@@ -22,6 +22,14 @@ const TILT = (9 * Math.PI) / 180;
 
 /** Rungs of the ladder. Not every rung carries a genre; the surplus are plain dust. */
 export const RUNG_COUNT = 26;
+/**
+ * How fast the molecule turns. One revolution takes a little over three minutes - drift
+ * rather than animation, which is the only speed tolerable on a page left open. Exported
+ * because the stat tiles' glyphs turn at the same rate; two rates would read as two
+ * unrelated things moving.
+ */
+export const GENOME_RADIANS_PER_SECOND = 0.032;
+
 /** How many secondary genres are lit at once. See `mostDivergent`. */
 export const LIT_RUNGS = 6;
 

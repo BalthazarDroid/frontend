@@ -87,6 +87,10 @@ export interface GenomeStats {
   /** Artists whose lookup raised, as opposed to simply finding nothing. */
   artists_failed: number;
   artists_resolved: number;
+  // True only when the artists currently in `error` state are exactly the set the user last
+  // dismissed via `genome/dismiss_unresolved` - a newly-failing artist flips this back to
+  // false so the "could not be identified" notice returns.
+  unresolved_dismissed: boolean;
 }
 
 export interface DivergenceFacts {

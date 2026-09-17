@@ -14,13 +14,13 @@
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="artists" class="mt-4 space-y-1.5">
+        <TabsContent value="artists" class="genome-list mt-4">
           <Item
             v-for="artist in topArtists"
             :key="artist.artist_key"
             variant="outline"
             size="sm"
-            class="justify-between"
+            class="genome-list__row"
           >
             <ItemContent>
               <ItemTitle>{{ artist.name }}</ItemTitle>
@@ -28,10 +28,13 @@
                 {{ $t("listening_genome.plays", { count: artist.plays }) }}
               </ItemDescription>
             </ItemContent>
-            <ItemContent class="flex-none items-end gap-1.5 text-right">
+            <ItemContent class="genome-list__meter">
+              <span class="genome-code">{{
+                $t("listening_genome.share_of_plays")
+              }}</span>
               <Progress
                 :model-value="artist.share * scaleArtists * 100"
-                class="w-24"
+                class="genome-list__bar"
               />
               <Badge
                 v-if="artist.ratio_vs_average"
@@ -48,13 +51,13 @@
           </Item>
         </TabsContent>
 
-        <TabsContent value="tracks" class="mt-4 space-y-1.5">
+        <TabsContent value="tracks" class="genome-list mt-4">
           <Item
             v-for="track in topTracks"
             :key="track.track_key"
             variant="outline"
             size="sm"
-            class="justify-between"
+            class="genome-list__row"
           >
             <ItemContent>
               <ItemTitle>{{ track.name }}</ItemTitle>
@@ -62,10 +65,13 @@
                 {{ track.artist }}
               </ItemDescription>
             </ItemContent>
-            <ItemContent class="flex-none items-end gap-1.5 text-right">
+            <ItemContent class="genome-list__meter">
+              <span class="genome-code">{{
+                $t("listening_genome.share_of_plays")
+              }}</span>
               <Progress
                 :model-value="track.share * scaleTracks * 100"
-                class="w-24"
+                class="genome-list__bar"
               />
               <span class="text-xs tabular-nums text-muted-foreground">
                 {{ $t("listening_genome.plays", { count: track.plays }) }}
