@@ -1,5 +1,5 @@
 <template>
-  <Card class="genome-panel-frame genome-tops">
+  <Card class="genome-panel-frame genome-tops bg-transparent">
     <CardHeader>
       <CardTitle>{{ $t("listening_genome.top_lists") }}</CardTitle>
     </CardHeader>

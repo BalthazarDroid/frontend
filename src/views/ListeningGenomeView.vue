@@ -55,7 +55,11 @@
       <!-- Two different facts, so two different notices: work still in progress, and work
            that could not be done. Folding failures into "still resolving" produced a
            progress message that sat at "3 still to go" for days. -->
-      <Alert v-if="genome.stats.artists_pending > 0" variant="default">
+      <Alert
+        v-if="genome.stats.artists_pending > 0"
+        variant="default"
+        class="genome-panel-frame"
+      >
         <Loader2 class="size-4 animate-spin" />
         <AlertTitle>{{ $t("listening_genome.enriching_title") }}</AlertTitle>
         <AlertDescription>
@@ -68,7 +72,11 @@
         </AlertDescription>
       </Alert>
 
-      <Alert v-else-if="genome.stats.artists_failed > 0" variant="default">
+      <Alert
+        v-else-if="genome.stats.artists_failed > 0"
+        variant="default"
+        class="genome-panel-frame"
+      >
         <TriangleAlert class="size-4" />
         <AlertTitle>{{ $t("listening_genome.unresolved_title") }}</AlertTitle>
         <AlertDescription>
@@ -88,7 +96,9 @@
                 {{ $t("listening_genome.unresolved_show") }}
               </Button>
             </DialogTrigger>
-            <DialogScrollContent class="genome-page max-w-md">
+            <DialogScrollContent
+              class="genome-page genome-panel-frame max-w-md"
+            >
               <DialogHeader>
                 <DialogTitle>
                   {{ $t("listening_genome.unresolved_title") }}
