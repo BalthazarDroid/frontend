@@ -1,10 +1,10 @@
 <template>
-  <div class="grid gap-4 sm:grid-cols-3">
+  <div class="genome-tiles">
     <Card
-      class="genome-panel-frame"
+      class="genome-panel-frame genome-tile-card gap-0 py-0"
       :class="{ 'opacity-60': obscurity.known_share < 0.5 }"
     >
-      <CardContent class="genome-tile py-4">
+      <CardContent class="genome-tile">
         <GeneGlyph :hue="BASE_HUES[0]" :intensity="glyphIntensity[0]" />
         <div class="genome-tile__body">
           <div class="flex items-center gap-1.5">
@@ -35,8 +35,8 @@
       </CardContent>
     </Card>
 
-    <Card class="genome-panel-frame">
-      <CardContent class="genome-tile py-4">
+    <Card class="genome-panel-frame genome-tile-card gap-0 py-0">
+      <CardContent class="genome-tile">
         <GeneGlyph :hue="BASE_HUES[3]" :intensity="glyphIntensity[1]" />
         <div class="genome-tile__body">
           <div class="flex items-center gap-1.5">
@@ -65,8 +65,8 @@
       </CardContent>
     </Card>
 
-    <Card class="genome-panel-frame">
-      <CardContent class="genome-tile py-4">
+    <Card class="genome-panel-frame genome-tile-card gap-0 py-0">
+      <CardContent class="genome-tile">
         <GeneGlyph :hue="BASE_HUES[1]" :intensity="glyphIntensity[2]" />
         <div class="genome-tile__body">
           <div class="flex items-center gap-1.5">

@@ -52,18 +52,37 @@
           </text>
         </svg>
       </div>
+
+      <!-- The steps are ranked rather than linear, so a reader has no way to infer the scale
+           from the cells alone. The legend is what makes it honest. -->
+      <div class="genome-rhythm__legend">
+        <span class="genome-code">{{
+          $t("listening_genome.rhythm_quieter")
+        }}</span>
+        <span
+          v-for="(swatch, i) in legendSwatches"
+          :key="i"
+          class="genome-rhythm__swatch"
+          :style="{ background: swatch }"
+          aria-hidden="true"
+        ></span>
+        <span class="genome-code">{{
+          $t("listening_genome.rhythm_busier")
+        }}</span>
+      </div>
     </CardContent>
   </Card>
 </template>
 
 <script setup lang="ts">
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatPercent, maxRhythmShare } from "@/helpers/genome_format";
 import {
-  formatPercent,
-  maxRhythmShare,
-  rhythmCellOpacity,
-} from "@/helpers/genome_format";
-import { rhythmColor } from "@/helpers/genome_color";
+  RHYTHM_STEPS,
+  rhythmColor,
+  rhythmStep,
+  rhythmThresholds,
+} from "@/helpers/genome_color";
 import { $t } from "@/plugins/i18n";
 import { computed } from "vue";
 import type { RhythmCell } from "@/composables/genome/types";
@@ -89,7 +108,17 @@ const weekdayLabels = [
 const width = gridX + 24 * cellSize + 4;
 const height = labelOffset + 7 * cellSize + 16;
 
+const thresholds = computed(() =>
+  rhythmThresholds(props.rhythm.map((c) => c.share)),
+);
 const maxShare = computed(() => maxRhythmShare(props.rhythm));
+
+/** Swatches for the legend, quietest to busiest. */
+const legendSwatches = computed(() =>
+  Array.from({ length: RHYTHM_STEPS }, (_, i) =>
+    rhythmColor(i / (RHYTHM_STEPS - 1)),
+  ),
+);
 /**
  * Each cell is a solid colour rather than one tint at varying opacity.
  *
@@ -101,7 +130,10 @@ const maxShare = computed(() => maxRhythmShare(props.rhythm));
 const cells = computed(() =>
   props.rhythm.map((c) => ({
     ...c,
-    fill: rhythmColor(rhythmCellOpacity(c.share, maxShare.value)),
+    fill: rhythmColor(
+      rhythmStep(c.share, thresholds.value, maxShare.value) /
+        (RHYTHM_STEPS - 1),
+    ),
   })),
 );
 </script>

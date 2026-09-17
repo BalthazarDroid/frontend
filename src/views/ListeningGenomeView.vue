@@ -163,16 +163,20 @@
         </Badge>
       </div>
 
-      <GenomeStatTiles
-        :obscurity="genome.obscurity"
-        :era="genome.era"
-        :loyalty="genome.loyalty"
-      />
-
-      <GenomeTopLists
-        :top-artists="genome.top_artists"
-        :top-tracks="genome.top_tracks"
-      />
+      <!-- The three figures stack in one narrow column and the top-twenty list fills a card
+           beside them, sized to that column rather than to its own content. Three wide tiles
+           in a row left each figure marooned in a third of the page. -->
+      <div class="genome-columns">
+        <GenomeStatTiles
+          :obscurity="genome.obscurity"
+          :era="genome.era"
+          :loyalty="genome.loyalty"
+        />
+        <GenomeTopLists
+          :top-artists="genome.top_artists"
+          :top-tracks="genome.top_tracks"
+        />
+      </div>
 
       <div class="grid items-start gap-6 lg:grid-cols-[1fr_380px]">
         <GenomeRhythmHeatmap :rhythm="genome.rhythm" />

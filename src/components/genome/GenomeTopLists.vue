@@ -1,11 +1,11 @@
 <template>
-  <Card class="genome-panel-frame">
+  <Card class="genome-panel-frame genome-tops">
     <CardHeader>
       <CardTitle>{{ $t("listening_genome.top_lists") }}</CardTitle>
     </CardHeader>
-    <CardContent>
-      <Tabs default-value="artists">
-        <TabsList class="grid w-full max-w-xs grid-cols-2">
+    <CardContent class="genome-tops__body">
+      <Tabs default-value="artists" class="genome-tops__tabs">
+        <TabsList class="grid w-full grid-cols-2">
           <TabsTrigger value="artists">
             {{ $t("listening_genome.top_artists") }}
           </TabsTrigger>
@@ -14,70 +14,49 @@
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="artists" class="genome-list mt-4">
-          <Item
-            v-for="artist in topArtists"
-            :key="artist.artist_key"
-            variant="outline"
-            size="sm"
-            class="genome-list__row"
-          >
-            <ItemContent>
-              <ItemTitle>{{ artist.name }}</ItemTitle>
-              <ItemDescription class="text-xs">
-                {{ $t("listening_genome.plays", { count: artist.plays }) }}
-              </ItemDescription>
-            </ItemContent>
-            <ItemContent class="genome-list__meter">
-              <span class="genome-code">{{
-                $t("listening_genome.share_of_plays")
-              }}</span>
-              <Progress
-                :model-value="artist.share * scaleArtists * 100"
-                class="genome-list__bar"
-              />
-              <Badge
-                v-if="artist.ratio_vs_average"
-                variant="secondary"
-                class="tabular-nums"
-              >
-                {{
-                  $t("listening_genome.vs_average", {
-                    ratio: formatRatio(artist.ratio_vs_average),
-                  })
-                }}
-              </Badge>
-            </ItemContent>
-          </Item>
+        <TabsContent value="artists" class="genome-tops__pane">
+          <ol class="genome-rank genome-tops__scroll">
+            <li
+              v-for="(artist, i) in topArtists"
+              :key="artist.artist_key"
+              class="genome-rank__row"
+            >
+              <span class="genome-rank__index">{{ pad(i + 1) }}</span>
+              <span class="genome-rank__body">
+                <span class="genome-rank__name">{{ artist.name }}</span>
+                <span class="genome-rank__meta">
+                  {{ $t("listening_genome.plays", { count: artist.plays }) }}
+                  <template v-if="artist.ratio_vs_average">
+                    ·
+                    {{
+                      $t("listening_genome.vs_average", {
+                        ratio: formatRatio(artist.ratio_vs_average),
+                      })
+                    }}
+                  </template>
+                </span>
+              </span>
+            </li>
+          </ol>
         </TabsContent>
 
-        <TabsContent value="tracks" class="genome-list mt-4">
-          <Item
-            v-for="track in topTracks"
-            :key="track.track_key"
-            variant="outline"
-            size="sm"
-            class="genome-list__row"
-          >
-            <ItemContent>
-              <ItemTitle>{{ track.name }}</ItemTitle>
-              <ItemDescription class="text-xs">
-                {{ track.artist }}
-              </ItemDescription>
-            </ItemContent>
-            <ItemContent class="genome-list__meter">
-              <span class="genome-code">{{
-                $t("listening_genome.share_of_plays")
-              }}</span>
-              <Progress
-                :model-value="track.share * scaleTracks * 100"
-                class="genome-list__bar"
-              />
-              <span class="text-xs tabular-nums text-muted-foreground">
-                {{ $t("listening_genome.plays", { count: track.plays }) }}
+        <TabsContent value="tracks" class="genome-tops__pane">
+          <ol class="genome-rank genome-tops__scroll">
+            <li
+              v-for="(track, i) in topTracks"
+              :key="track.track_key"
+              class="genome-rank__row"
+            >
+              <span class="genome-rank__index">{{ pad(i + 1) }}</span>
+              <span class="genome-rank__body">
+                <span class="genome-rank__name">{{ track.name }}</span>
+                <span class="genome-rank__meta">
+                  {{ track.artist }} ·
+                  {{ $t("listening_genome.plays", { count: track.plays }) }}
+                </span>
               </span>
-            </ItemContent>
-          </Item>
+            </li>
+          </ol>
         </TabsContent>
       </Tabs>
     </CardContent>
@@ -85,37 +64,27 @@
 </template>
 
 <script setup lang="ts">
-import { Badge } from "@/components/ui/badge";
+/**
+ * The household's top twenty artists and tracks.
+ *
+ * Deliberately no share meter. The bar re-encoded what the play count already states, and
+ * spent most of each row's width doing it - which left a wide gap between the name and a
+ * graphic that added nothing. The rank number carries the ordering instead, and the twenty
+ * rows fit a column that scrolls rather than a page that grows.
+ */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemTitle,
-} from "@/components/ui/item";
-import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatRatio } from "@/helpers/genome_format";
 import { $t } from "@/plugins/i18n";
-import { computed } from "vue";
 import type { ArtistFact, TrackFact } from "@/composables/genome/types";
 
-const props = defineProps<{
+defineProps<{
   topArtists: ArtistFact[];
   topTracks: TrackFact[];
 }>();
 
-// Progress bars are relative to the top row within each list, not the
-// (much smaller) absolute share, so the leader reads as a full bar.
-function relativeScale(shares: number[]): number {
-  const max = shares.reduce((m, s) => Math.max(m, s), 0);
-  return max > 0 ? 1 / max : 0;
+/** Zero-padded so the rank column stays a fixed width and the names line up. */
+function pad(n: number): string {
+  return n.toString().padStart(2, "0");
 }
-
-const scaleArtists = computed(() =>
-  relativeScale(props.topArtists.map((a) => a.share)),
-);
-const scaleTracks = computed(() =>
-  relativeScale(props.topTracks.map((t) => t.share)),
-);
 </script>

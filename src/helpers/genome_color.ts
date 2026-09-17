@@ -195,22 +195,95 @@ export function mixHue(a: number, b: number, f: number): number {
 }
 
 /**
+ * How many steps the listening-rhythm scale is quantised into.
+ *
+ * Discrete rather than continuous, and quantised by RANK rather than by value. A linear
+ * ramp against the busiest hour wastes almost its whole range: one or two peak hours sit at
+ * the top and every other hour crushes into the bottom fifth, which is why the grid read as
+ * two shades of navy with a few bright cells. Ranking spreads the cells across the full ramp,
+ * so the shape of a week is actually visible. The exact share stays in each cell's tooltip,
+ * which is where a precise figure belongs.
+ */
+export const RHYTHM_STEPS = 6;
+
+/**
+ * Cut points that split the non-empty cells into roughly equal-sized groups.
+ *
+ * Empty hours are excluded before ranking - in a typical week they are a large share of the
+ * grid, and letting them occupy the lower steps would push everything else up and flatten the
+ * top end all over again.
+ *
+ * :param shares: Every cell's share, in any order.
+ * :param steps: How many groups to cut into.
+ */
+export function rhythmThresholds(
+  shares: number[],
+  steps = RHYTHM_STEPS,
+): number[] {
+  const active = shares.filter((s) => s > 0).sort((a, b) => a - b);
+  if (active.length === 0) return [];
+  const cuts: number[] = [];
+  for (let i = 1; i < steps; i++) {
+    const at = Math.floor((active.length * i) / steps);
+    cuts.push(active[Math.min(at, active.length - 1)]);
+  }
+  return cuts;
+}
+
+/**
+ * Which step a cell falls in, 0 for empty through `steps - 1` for the busiest group.
+ *
+ * :param share: This cell's share.
+ * :param thresholds: Cut points from `rhythmThresholds`.
+ */
+export function rhythmStep(
+  share: number,
+  thresholds: number[],
+  max = 0,
+): number {
+  if (share <= 0) return 0;
+  let rank = 1;
+  for (const cut of thresholds) {
+    if (share > cut) rank++;
+  }
+  if (max <= 0) return Math.min(rank, RHYTHM_STEPS - 1);
+  // Half rank, half raw magnitude. Pure ranking spreads the cells evenly by construction,
+  // which puts a full sixth of the grid on the brightest step - a wall of colour that says
+  // "these are the peak hours" about twenty-eight different hours. Blending the true value
+  // back in pulls the ordinary hours down into the middle of the ramp and leaves the top step
+  // to the hours that genuinely earn it, while the rank half still keeps a lopsided week from
+  // collapsing into two shades.
+  const byRank = rank / (RHYTHM_STEPS - 1);
+  const byValue = share / max;
+  const blended = 0.5 * byRank + 0.5 * byValue;
+  return Math.max(
+    1,
+    Math.min(RHYTHM_STEPS - 1, Math.round(blended * (RHYTHM_STEPS - 1))),
+  );
+}
+
+/**
  * The listening-rhythm scale: quiet hours to the household's busiest hour.
  *
- * Runs from the page's own panel tone up to the accent cyan rather than through a generic
- * chart blue, and interpolates in OKLCH so the ramp is perceptually even - an HSL ramp
- * bunches most of its apparent change at one end, which reads as a threshold in the data
- * that is not there.
+ * Travels from the deep blue of the molecule's first base to the green of its fourth, through
+ * the cyan between them - two of the four base hues rather than all four. A magnitude scale
+ * has to stay legible as an ORDER, and a ramp that visits every hue invents boundaries the
+ * data does not have: the eye reads "green" and "orange" as different kinds of thing rather
+ * than as more and less. Blue to green climbs without ever reversing direction in hue or
+ * lightness, which is what lets it carry more colour than a single-hue ramp while still
+ * reading as one continuous scale.
  *
- * :param intensity: 0..1, this cell's share against the busiest cell.
+ * :param intensity: 0..1, this cell's position on the scale.
  */
 export function rhythmColor(intensity: number): string {
   const t = Math.max(0, Math.min(1, intensity));
-  // Eased so the long tail of quiet hours stays legible instead of collapsing to one flat
-  // dark tone, which is what a linear ramp does when one or two hours dominate.
-  const e = t ** 0.72;
-  const l = 0.26 + 0.48 * e;
-  const c = 0.02 + 0.105 * e;
-  const h = mixHue(255, 195, e);
+  // Lightness and chroma both rise with the value, so the scale survives being printed in
+  // grey and stays ordered for a colourblind reader; hue is the decoration, not the encoding.
+  const l = 0.26 + 0.48 * t;
+  const c = 0.025 + 0.095 * t;
+  // Stops at teal rather than running all the way to the base green: at full lightness that
+  // green is the loudest colour on the page, and a heatmap is not meant to out-shout the
+  // molecule it sits under.
+  const h = mixHue(232, 168, t);
   return oklch(l, c, h);
 }

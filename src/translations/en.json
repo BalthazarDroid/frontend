@@ -2704,6 +2704,8 @@
       "no_cold": "Nothing neglected — you've played everything in your library.",
       "refresh": "Look for new suggestions",
       "error": "Could not load discovery data."
-    }
+    },
+    "rhythm_quieter": "Quieter",
+    "rhythm_busier": "Busier"
   }
 }

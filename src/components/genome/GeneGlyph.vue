@@ -113,8 +113,11 @@ function draw(): void {
     const x = W / 2 + dx * ca - dy * sa;
     const y = midY + dx * sa + dy * ca;
     const depth = (Math.sin(theta) + 1) / 2;
+    // The intensity floor is high because it has to be: an obscurity index of 0% drove this
+    // to near-nothing, and a barely-there glyph reads as a half-drawn graphic rather than as
+    // a low reading. The number beside it carries the value; the glyph only has to be there.
     const alpha =
-      s.gain * (0.12 + 0.85 * depth) * (0.35 + 0.5 * props.intensity);
+      s.gain * (0.12 + 0.85 * depth) * (0.62 + 0.38 * props.intensity);
     if (alpha <= 0.01) continue;
     // Lightness barely moves with depth; chroma carries it instead. In OKLCH that keeps
     // the near face reading as "more colour" rather than "brighter", so the glyph does not

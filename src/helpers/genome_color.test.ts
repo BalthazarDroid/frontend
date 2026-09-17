@@ -9,6 +9,9 @@ import {
   mixHue,
   oklch,
   rhythmColor,
+  RHYTHM_STEPS,
+  rhythmStep,
+  rhythmThresholds,
 } from "./genome_color";
 
 /** Parse the `rgb(r g b)` / `rgba(r, g, b, a)` this module emits. */
@@ -170,5 +173,84 @@ describe("rhythmColor", () => {
    */
   it("keeps the quietest cell distinguishable from nothing", () => {
     expect(relativeLuminance(rhythmColor(0))).toBeGreaterThan(0.01);
+  });
+
+  /**
+   * A magnitude scale must survive being read without colour. Hue carries none of the
+   * encoding here - lightness does - so the ramp still reads as an order in greyscale, and
+   * for a colourblind reader.
+   */
+  it("separates its ends strongly enough to read without hue", () => {
+    const ratio =
+      relativeLuminance(rhythmColor(1)) / relativeLuminance(rhythmColor(0));
+    expect(ratio).toBeGreaterThan(4);
+  });
+
+  /** Blue to green, never doubling back into the warm half - that would be a rainbow. */
+  it("does not wander into warm hues", () => {
+    for (let i = 0; i <= 10; i++) {
+      const [r, , b] = parse(rhythmColor(i / 10));
+      expect(b).toBeGreaterThan(r);
+    }
+  });
+});
+
+describe("the rhythm ranking", () => {
+  /**
+   * The reason the scale is ranked at all.
+   *
+   * A linear ramp against the busiest hour put one peak at the top and crushed everything
+   * else into the bottom of the range, so a week of real variation rendered as two shades of
+   * navy. Ranking has to spread that same data across the steps.
+   */
+  it("spreads a lopsided distribution across the whole range", () => {
+    const shares = [500, ...Array.from({ length: 30 }, (_, i) => i + 1)];
+    const cuts = rhythmThresholds(shares);
+    const used = new Set(shares.map((s) => rhythmStep(s, cuts)));
+    expect(used.size).toBeGreaterThanOrEqual(RHYTHM_STEPS - 1);
+  });
+
+  it("keeps empty hours at step zero, below every real value", () => {
+    const cuts = rhythmThresholds([1, 2, 3, 4, 5, 6]);
+    expect(rhythmStep(0, cuts)).toBe(0);
+    expect(rhythmStep(1, cuts)).toBeGreaterThan(0);
+  });
+
+  it("never exceeds the last step", () => {
+    const cuts = rhythmThresholds([1, 2, 3]);
+    expect(rhythmStep(999, cuts)).toBeLessThanOrEqual(RHYTHM_STEPS - 1);
+  });
+
+  it("orders any two cells the way their shares order them", () => {
+    const shares = [3, 9, 1, 27, 81, 5, 14];
+    const cuts = rhythmThresholds(shares);
+    for (const a of shares) {
+      for (const b of shares) {
+        if (a > b)
+          expect(rhythmStep(a, cuts)).toBeGreaterThanOrEqual(
+            rhythmStep(b, cuts),
+          );
+      }
+    }
+  });
+
+  it("survives a grid with nothing in it", () => {
+    expect(rhythmThresholds([])).toEqual([]);
+    expect(rhythmThresholds([0, 0, 0])).toEqual([]);
+    expect(rhythmStep(0, [])).toBe(0);
+  });
+
+  /** Excluding empties matters: in a real week most of the 168 cells are zero. */
+  it("ignores empty cells when choosing its cut points", () => {
+    const withEmpties = rhythmThresholds([
+      ...Array(100).fill(0),
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+    ]);
+    expect(withEmpties).toEqual(rhythmThresholds([1, 2, 3, 4, 5, 6]));
   });
 });
