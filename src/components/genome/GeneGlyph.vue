@@ -160,8 +160,10 @@ watch(() => [props.hue, props.intensity], draw);
 
 <style scoped>
 .gene-glyph {
-  width: 32px;
-  height: 46px;
+  /* 64 x 92 internally, so this keeps the aspect exactly rather than squashing the
+     helix a fraction narrower than the one in the plate. */
+  width: 44px;
+  height: 63px;
   flex: 0 0 auto;
   opacity: 0.9;
   pointer-events: none;

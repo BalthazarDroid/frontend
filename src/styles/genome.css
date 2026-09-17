@@ -257,7 +257,6 @@
 .genome-page .genome-tile {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 14px;
 }
 /* Text left, glyph hard right. The figure is what the tile is for, so it starts at the
@@ -266,13 +265,27 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  /* Only as wide as its text, so the leftover width is a real gap the glyph can sit in
+     the middle of. `1fr` here would leave the glyph pinned to the edge again. */
+  flex: 0 1 auto;
   min-width: 0;
   text-align: left;
+  /* The glyph is first in the DOM (it is decoration, and screen readers skip it), so
+     the visual order has to be stated: text first, glyph after. */
   order: 0;
 }
+/* Auto margins on BOTH sides: the glyph centres itself in whatever space the text has
+   not taken, rather than hugging either edge. */
 .genome-page .gene-glyph {
   order: 1;
-  margin-left: auto;
+  margin-inline: auto;
+}
+/* The eclecticism tile's caption is the longest on the row; let it wrap rather than
+   squeeze the glyph's lane down to nothing. */
+.genome-page .genome-tile__body .genome-code {
+  white-space: normal;
+  line-height: 1.45;
+  max-width: 22ch;
 }
 
 /* ---- top artists / tracks -------------------------------------------------------- */
