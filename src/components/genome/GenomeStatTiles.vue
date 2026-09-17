@@ -1,8 +1,11 @@
 <template>
   <div class="grid gap-4 sm:grid-cols-3">
-    <Card :class="{ 'opacity-60': obscurity.known_share < 0.5 }">
+    <Card
+      class="genome-panel-frame"
+      :class="{ 'opacity-60': obscurity.known_share < 0.5 }"
+    >
       <CardContent class="genome-tile py-4">
-        <GeneGlyph :hue="190" :intensity="glyphIntensity[0]" />
+        <GeneGlyph :hue="BASE_HUES[0]" :intensity="glyphIntensity[0]" />
         <div class="genome-tile__body">
           <div class="flex items-center gap-1.5">
             <span class="genome-code">
@@ -34,7 +37,7 @@
 
     <Card class="genome-panel-frame">
       <CardContent class="genome-tile py-4">
-        <GeneGlyph :hue="100" :intensity="glyphIntensity[1]" />
+        <GeneGlyph :hue="BASE_HUES[3]" :intensity="glyphIntensity[1]" />
         <div class="genome-tile__body">
           <div class="flex items-center gap-1.5">
             <span class="genome-code">
@@ -64,7 +67,7 @@
 
     <Card class="genome-panel-frame">
       <CardContent class="genome-tile py-4">
-        <GeneGlyph :hue="280" :intensity="glyphIntensity[2]" />
+        <GeneGlyph :hue="BASE_HUES[1]" :intensity="glyphIntensity[2]" />
         <div class="genome-tile__body">
           <div class="flex items-center gap-1.5">
             <span class="genome-code">
@@ -105,6 +108,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import GeneGlyph from "./GeneGlyph.vue";
+import { BASE_HUES } from "@/helpers/genome_color";
 /**
  * The effective number of genres: "listens across the equivalent of N genres, evenly".
  * One decimal, because the figure is a continuous measure and rounding 8.4 to 8 throws

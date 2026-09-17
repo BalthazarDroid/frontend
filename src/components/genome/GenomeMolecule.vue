@@ -174,6 +174,9 @@
                 <div class="genome-baserow__share">
                   {{ formatPercent(base.share) }}
                 </div>
+                <div v-if="genreDesc(base.key)" class="genome-baserow__desc">
+                  {{ genreDesc(base.key) }}
+                </div>
               </div>
             </div>
 
@@ -181,39 +184,86 @@
               {{ $t("listening_genome.molecule.backbone_explainer") }}
             </p>
 
-            <Popover>
-              <PopoverTrigger as-child>
-                <button type="button" class="genome-legend-trigger">
-                  {{ $t("listening_genome.molecule.legend_heading") }}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent class="genome-page w-72" side="top">
-                <div class="genome-legend">
-                  <p
-                    v-for="key in [
-                      'overexpressed',
-                      'stable',
-                      'underexpressed',
-                    ] as ExpressionStatus[]"
-                    :key="key"
-                    class="genome-legend__row"
-                  >
-                    <span
-                      class="genome-legend__swatch"
-                      :style="{ background: statusStyle(key).c }"
-                    ></span>
-                    <span>{{
-                      $t(
-                        `listening_genome.molecule.legend_${key === "overexpressed" ? "over" : key === "stable" ? "stable" : "under"}`,
-                      )
-                    }}</span>
-                  </p>
-                  <p class="genome-legend__note">
-                    {{ $t("listening_genome.molecule.legend_note") }}
-                  </p>
-                </div>
-              </PopoverContent>
-            </Popover>
+            <div class="genome-panel__actions">
+              <Popover>
+                <PopoverTrigger as-child>
+                  <button type="button" class="genome-legend-trigger">
+                    {{ $t("listening_genome.molecule.legend_heading") }}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent class="genome-page w-72" side="top">
+                  <div class="genome-legend">
+                    <p
+                      v-for="key in [
+                        'overexpressed',
+                        'stable',
+                        'underexpressed',
+                      ] as ExpressionStatus[]"
+                      :key="key"
+                      class="genome-legend__row"
+                    >
+                      <span
+                        class="genome-legend__swatch"
+                        :style="{ background: statusStyle(key).c }"
+                      ></span>
+                      <span>{{
+                        $t(
+                          `listening_genome.molecule.legend_${key === "overexpressed" ? "over" : key === "stable" ? "stable" : "under"}`,
+                        )
+                      }}</span>
+                    </p>
+                    <p class="genome-legend__note">
+                      {{ $t("listening_genome.molecule.legend_note") }}
+                    </p>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              <Popover>
+                <PopoverTrigger as-child>
+                  <button type="button" class="genome-legend-trigger">
+                    {{ $t("listening_genome.molecule.mix_heading") }}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent class="genome-page w-80" side="top">
+                  <div class="genome-legend">
+                    <p class="genome-legend__lead">
+                      {{ $t("listening_genome.molecule.mix_lead") }}
+                    </p>
+                    <p class="genome-legend__row">
+                      <span
+                        class="genome-legend__swatch"
+                        :style="{ background: mixExample.pure }"
+                      ></span>
+                      <span>{{
+                        $t("listening_genome.molecule.mix_pure")
+                      }}</span>
+                    </p>
+                    <p class="genome-legend__row">
+                      <span
+                        class="genome-legend__swatch"
+                        :style="{ background: mixExample.blend }"
+                      ></span>
+                      <span>{{
+                        $t("listening_genome.molecule.mix_blend")
+                      }}</span>
+                    </p>
+                    <p class="genome-legend__row">
+                      <span
+                        class="genome-legend__swatch"
+                        :style="{ background: mixExample.even }"
+                      ></span>
+                      <span>{{
+                        $t("listening_genome.molecule.mix_even")
+                      }}</span>
+                    </p>
+                    <p class="genome-legend__note">
+                      {{ $t("listening_genome.molecule.mix_note") }}
+                    </p>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
         </div>
 
@@ -264,6 +314,14 @@ import {
   type ExpressionStatus,
 } from "@/helpers/genome_molecule";
 import { formatPercent, formatPlays } from "@/helpers/genome_format";
+import {
+  BASE_HUES,
+  DUST,
+  baseColor,
+  mixColor,
+  mixHue,
+  oklch,
+} from "@/helpers/genome_color";
 import { $t } from "@/plugins/i18n";
 import {
   computed,
@@ -293,27 +351,18 @@ const props = withDefaults(
 
 // ---- palette ------------------------------------------------------------------
 
-// Fixed hues for up to 4 bases - a purely presentational palette, not tied to genre
-// identity, so it's stable regardless of which genres occupy the slots.
-// Evenly spaced, 90 degrees apart, and that spacing is the whole point. The first
-// palette used 188/288/146/30, where cyan and green sit only 42 degrees apart: any mix
-// touching both reinforced along that arc, and 53% of blends came back somewhere in the
-// green-to-cyan band regardless of the genre's actual character. With equal spacing no
-// pair reinforces more than any other, and a genre with no real allegiance cancels toward
-// grey instead of drifting teal.
-const HUES = [190, 280, 10, 100];
-function baseColor(index: number, lightness = 62, saturation = 82): string {
-  return `hsl(${HUES[index % HUES.length]} ${saturation}% ${lightness}%)`;
-}
-/** Uncoloured particles: the structure everything else is suspended in. */
-const DUST = "hsl(210 12% 88%)";
+// The palette itself lives in helpers/genome_color.ts, computed in OKLCH. The short
+// version of why: an HSL palette spaced evenly by hue is not spaced evenly by perceived
+// brightness - green outran purple by 3x at the same HSL lightness, and the additive
+// canvas compositing below multiplied that head start until every molecule read
+// cyan-to-green regardless of the genres behind it.
 
 // The legend markers are the same object as a particle in the molecule: a soft-edged,
 // translucent blob, not a flat disc. A radial gradient reproduces the renderer's falloff,
 // and a highlight off-centre is what makes it read as a bubble rather than a smudge.
 function bubble(index: number): string {
-  const core = baseColor(index, 68, 85);
-  const edge = baseColor(index, 52, 80);
+  const core = baseColor(index, 0.8, 0.13);
+  const edge = baseColor(index, 0.66, 0.12);
   return (
     `radial-gradient(circle at 38% 34%, rgba(255,255,255,.55) 0%, ` +
     `rgba(255,255,255,0) 34%), ` +
@@ -322,49 +371,34 @@ function bubble(index: number): string {
   );
 }
 
-/** Shortest-path hue interpolation, so cyan never blends through red to reach orange. */
-function mixHue(a: number, b: number, f: number): number {
-  const delta = ((b - a + 540) % 360) - 180;
-  return (a + delta * f + 360) % 360;
+/** A rung's colour: all four base colours mixed, weighted by the genre's affinity. */
+function rungColor(mix: number[], muted = false): string {
+  return mixColor(mix, muted);
 }
 
 /**
- * A rung's colour: all four base colours mixed, weighted by the genre's affinity to each.
+ * A one-line description of what a genre actually is.
  *
- * Averaging the hues numerically would be wrong (the average of cyan and orange is green,
- * which is a base colour and means something else), and averaging RGB turns any even
- * blend to mud. Instead each base is a VECTOR on the colour wheel - its own hue for
- * direction, its share of the mix for length - and they are summed. Two useful properties
- * fall out of that for free:
- *
- *   - the resultant angle is a true blend, so a genre split between cyan and magenta
- *     lands on the violet between them, distinct from either;
- *   - the resultant LENGTH is how lopsided the mix is. A genre that belongs equally to
- *     all four cancels out to near zero and comes back almost colourless, which is the
- *     honest answer: it has no particular allegiance.
+ * Returns an empty string for a genre with no entry rather than echoing the key, so a
+ * vocabulary that grows ahead of the translations degrades to silence instead of to
+ * `genre_desc.some_new_key` printed on the panel.
  */
-function rungColor(mix: number[], muted = false): string {
-  if (mix.length === 0) return DUST;
-  const total = mix.reduce((sum, w) => sum + Math.max(0, w), 0);
-  if (total <= 0) return DUST;
-  let vx = 0;
-  let vy = 0;
-  mix.forEach((weight, i) => {
-    const angle = (HUES[i % HUES.length] * Math.PI) / 180;
-    const w = Math.max(0, weight) / total;
-    vx += w * Math.cos(angle);
-    vy += w * Math.sin(angle);
-  });
-  const hue = ((Math.atan2(vy, vx) * 180) / Math.PI + 360) % 360;
-  const purity = Math.min(1, Math.hypot(vx, vy));
-  // A rung that is not among the divergent six still shows its true hue, but drained of
-  // most of its saturation. That keeps the hierarchy doing the work: the six read as "in
-  // colour" and the rest as tinted structure, rather than twenty-six equal claims on the
-  // eye. Hue is preserved either way, so a muted rung is still recognisably itself.
-  const sat = (38 + 50 * purity) * (muted ? 0.42 : 1);
-  const light = (54 + 14 * purity) * (muted ? 0.88 : 1);
-  return `hsl(${hue.toFixed(1)} ${Math.round(sat)}% ${Math.round(light)}%)`;
+function genreDesc(key: string): string {
+  const text = $t(`listening_genome.molecule.genre_desc.${key}`);
+  return text.startsWith("listening_genome.") ? "" : text;
 }
+
+/**
+ * Three worked examples for the mixing explainer, built with the real mixing function.
+ *
+ * Hard-coded swatches would drift the moment the palette moved - which it has, twice. These
+ * come out of `rungColor` itself, so the explanation cannot disagree with the molecule.
+ */
+const mixExample = computed(() => ({
+  pure: rungColor([1, 0, 0, 0]),
+  blend: rungColor([0.62, 0.3, 0.05, 0.03]),
+  even: rungColor([0.25, 0.25, 0.25, 0.25]),
+}));
 
 // ---- data shaping ---------------------------------------------------------------
 
@@ -515,15 +549,15 @@ function legColor(t: number): string {
   const list = bands.value;
   if (list.length === 0) return DUST;
   const { index, next, mix } = bandAt(list, t);
-  const h1 = HUES[list[index].baseIndex % HUES.length];
+  const h1 = BASE_HUES[list[index].baseIndex % BASE_HUES.length];
   const hue =
     next === -1
       ? h1
-      : mixHue(h1, HUES[list[next].baseIndex % HUES.length], mix);
-  // Saturated enough to read as a band of that base's colour, light enough to stay
+      : mixHue(h1, BASE_HUES[list[next].baseIndex % BASE_HUES.length], mix);
+  // Chromatic enough to read as a band of that base's colour, light enough to stay
   // subordinate to the lit rungs - the backbone is where the listening SITS, the rungs
   // are what makes it unusual.
-  return `hsl(${hue} 50% 70%)`;
+  return oklch(0.78, 0.075, hue);
 }
 
 function draw(): void {
@@ -867,7 +901,7 @@ const barMaskStyle = {
 
 const hudBarGradient = computed(() => {
   if (!hudInfo.value || !hudInfo.value.mixKnown) return "";
-  const stops = mixGradientStops(hudInfo.value.mix, (i) => baseColor(i, 58));
+  const stops = mixGradientStops(hudInfo.value.mix, (i) => baseColor(i, 0.7));
   return `linear-gradient(90deg, ${stops
     .map((s) => `${s.color} ${s.offsetPercent.toFixed(1)}%`)
     .join(",")})`;
@@ -979,10 +1013,33 @@ const legAriaLabel = computed(() =>
   margin-left: var(--lane-gap);
   width: var(--panel-w);
   align-self: start;
+  /* Never taller than the plate it floats on: with four base descriptions the panel outgrew
+     the plate and its triggers ended up below the artwork, on the card background. */
+  max-height: calc(100% - 24px);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   padding: 14px 15px 13px;
   background: rgba(255, 255, 255, 0.035);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
+}
+.genome-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+/* The four base rows carry descriptions now, which is enough extra height to push the
+   panel past the bottom of the plate it floats on. Bounding the ROWS rather than the panel
+   keeps the heading, the explainer and both triggers visible at all times - the part that
+   scrolls is the part that is a list. */
+.genome-panel__rows {
+  /* Takes whatever height the panel has left after the heading, explainer and triggers, and
+     scrolls beyond that. A fixed max-height was a guess that had to be re-guessed for every
+     plate size; this bounds itself against the plate instead. */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 .genome-panel__heading {
   font-family: var(--genome-text);
@@ -1137,10 +1194,14 @@ const legAriaLabel = computed(() =>
 }
 
 .genome-baserow {
-  display: flex;
-  justify-content: space-between;
+  /* A grid rather than a flex row, so the description can span the full width underneath
+     instead of sharing a line with the share figure. Squeezed beside it, a description
+     wrapped to four lines in a panel this narrow and pushed the share badge into the middle
+     of a paragraph. */
+  display: grid;
+  grid-template-columns: 1fr auto;
   align-items: center;
-  gap: 8px;
+  gap: 2px 8px;
   padding: 8px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
@@ -1171,6 +1232,16 @@ const legAriaLabel = computed(() =>
   width: 15px;
   height: 15px;
   flex-shrink: 0;
+}
+.genome-baserow__desc {
+  grid-column: 1 / -1;
+  /* Aligned under the label, not under the dot: the dot belongs to the row, the description
+     belongs to the name. */
+  padding-left: 24px;
+  font-size: 11px;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  color: #757982;
 }
 .genome-baserow__code {
   font:

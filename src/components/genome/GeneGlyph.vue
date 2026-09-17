@@ -21,16 +21,17 @@
  * because someone hovered a rung two cards away would look like a bug.
  */
 import { GENOME_RADIANS_PER_SECOND } from "@/helpers/genome_helix";
+import { BASE_L, oklch } from "@/helpers/genome_color";
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 const props = withDefaults(
   defineProps<{
-    /** Hue in degrees, normally one of the molecule's four base hues. */
+    /** OKLCH hue in degrees, normally one of the molecule's four base hues. */
     hue?: number;
     /** 0..1 - how far this tile's own figure sits along its range, if it has one. */
     intensity?: number;
   }>(),
-  { hue: 190, intensity: 0.6 },
+  { hue: 195, intensity: 0.6 },
 );
 
 const W = 64;
@@ -115,8 +116,12 @@ function draw(): void {
     const alpha =
       s.gain * (0.12 + 0.85 * depth) * (0.35 + 0.5 * props.intensity);
     if (alpha <= 0.01) continue;
-    const light = 52 + 16 * depth;
-    ctx.fillStyle = `hsla(${props.hue} 72% ${light}% / ${Math.min(1, alpha)})`;
+    // Lightness barely moves with depth; chroma carries it instead. In OKLCH that keeps
+    // the near face reading as "more colour" rather than "brighter", so the glyph does not
+    // flash as it turns.
+    const l = BASE_L - 0.1 + 0.08 * depth;
+    const c = 0.05 + 0.075 * depth;
+    ctx.fillStyle = oklch(l, c, props.hue, Math.min(1, alpha));
     ctx.beginPath();
     ctx.arc(x, y, s.size * (0.6 + 0.6 * depth), 0, Math.PI * 2);
     ctx.fill();

@@ -31,8 +31,7 @@
               :width="cellSize - 1"
               :height="cellSize - 1"
               rx="1.5"
-              fill="var(--chart-1)"
-              :opacity="cellData.opacity"
+              :fill="cellData.fill"
             >
               <title>
                 {{ weekdayLabels[cellData.weekday] }} {{ cellData.hour }}:00 ·
@@ -64,6 +63,7 @@ import {
   maxRhythmShare,
   rhythmCellOpacity,
 } from "@/helpers/genome_format";
+import { rhythmColor } from "@/helpers/genome_color";
 import { $t } from "@/plugins/i18n";
 import { computed } from "vue";
 import type { RhythmCell } from "@/composables/genome/types";
@@ -90,10 +90,18 @@ const width = gridX + 24 * cellSize + 4;
 const height = labelOffset + 7 * cellSize + 16;
 
 const maxShare = computed(() => maxRhythmShare(props.rhythm));
+/**
+ * Each cell is a solid colour rather than one tint at varying opacity.
+ *
+ * Opacity let the page background show through, so a quiet hour read as a hole in the card
+ * instead of as a low value, and the scale inherited whatever was behind it. A colour taken
+ * from the genome ramp keeps the grid reading as one surface and puts the card on the same
+ * palette as the molecule above it.
+ */
 const cells = computed(() =>
   props.rhythm.map((c) => ({
     ...c,
-    opacity: rhythmCellOpacity(c.share, maxShare.value),
+    fill: rhythmColor(rhythmCellOpacity(c.share, maxShare.value)),
   })),
 );
 </script>

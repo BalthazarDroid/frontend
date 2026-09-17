@@ -194,3 +194,36 @@ export interface GenomeSettingsPatch {
   min_seconds_played?: number;
   apple_import_dir?: string;
 }
+
+/** One artist already in the library that the household has barely or never played. */
+export interface ColdArtist {
+  artist_key: string;
+  artist_name: string;
+  plays: number;
+  genre_key: string | null;
+  genre_label: string | null;
+}
+
+/** One artist Last.fm considers similar to a household favourite, and not in the library. */
+export interface SuggestedArtist {
+  artist_name: string;
+  mbid: string | null;
+  seed_artist: string;
+  genre_key: string | null;
+  genre_label: string | null;
+  match: number;
+}
+
+/**
+ * The `genome/discovery` payload.
+ *
+ * `suggested_state` is "unavailable" when no Last.fm key is configured - a normal state, not
+ * an error, in which `in_library` is still populated - "pending" before the background pass
+ * has produced anything, and "ready" otherwise.
+ */
+export interface DiscoveryResult {
+  in_library: ColdArtist[];
+  suggested: SuggestedArtist[];
+  suggested_state: "ready" | "pending" | "unavailable";
+  generated_at: number | null;
+}

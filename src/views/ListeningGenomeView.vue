@@ -174,9 +174,9 @@
         :top-tracks="genome.top_tracks"
       />
 
-      <div class="grid gap-6 lg:grid-cols-[1fr_320px]">
+      <div class="grid items-start gap-6 lg:grid-cols-[1fr_380px]">
         <GenomeRhythmHeatmap :rhythm="genome.rhythm" />
-        <GenomePlayerSplit :players="genome.players" />
+        <GenomeDiscovery />
       </div>
 
       <p class="text-xs text-muted-foreground">
@@ -212,7 +212,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import GenomeEmptyState from "@/components/genome/GenomeEmptyState.vue";
 import GenomeMolecule from "@/components/genome/GenomeMolecule.vue";
-import GenomePlayerSplit from "@/components/genome/GenomePlayerSplit.vue";
+import GenomeDiscovery from "@/components/genome/GenomeDiscovery.vue";
 import GenomeRhythmHeatmap from "@/components/genome/GenomeRhythmHeatmap.vue";
 import GenomeStatTiles from "@/components/genome/GenomeStatTiles.vue";
 import GenomeTopLists from "@/components/genome/GenomeTopLists.vue";
