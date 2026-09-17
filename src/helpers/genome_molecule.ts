@@ -51,9 +51,29 @@ export function pairRungsWithGenres(
 
 /** Overexpressed / Stable / Underexpressed thresholds - a frontend decision
  * per docs/ARCHITECTURE.md §3.4 ("do not invent thresholds in the server"). */
-export type ExpressionStatus = "overexpressed" | "stable" | "underexpressed";
+export type ExpressionStatus =
+  | "overexpressed"
+  | "stable"
+  | "underexpressed"
+  | "unmeasured";
 
-export function statusForRatio(ratio: number): ExpressionStatus {
+/**
+ * A genre's expression, or "unmeasured" when there is nothing to measure it against.
+ *
+ * The fourth state is not a nicety. Twenty of the fifty-nine genres have no baseline at all -
+ * the reference sample is drawn from the world's most-played artists, so ambient, klezmer and
+ * their like are simply absent from it, and no amount of extra sampling changes that. Without
+ * this case such a genre took `ratio` 0 and rendered as UNDEREXPRESSED, which states the
+ * opposite of the truth about a household that plays a lot of it.
+ *
+ * :param ratio: The genre's share against the baseline's.
+ * :param baselineKnown: Whether the baseline holds enough of this genre to compare against.
+ */
+export function statusForRatio(
+  ratio: number,
+  baselineKnown = true,
+): ExpressionStatus {
+  if (!baselineKnown) return "unmeasured";
   if (ratio >= 2.0) return "overexpressed";
   if (ratio >= 0.7) return "stable";
   return "underexpressed";

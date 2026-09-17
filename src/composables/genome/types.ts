@@ -13,6 +13,13 @@ export interface GenreShare {
   share: number;
   baseline_share: number;
   ratio: number;
+  /**
+   * Whether the reference sample holds enough of this genre to compare against.
+   *
+   * False means the baseline saw too little of it to support a ratio - `ratio` is then 0 and
+   * says nothing. `share` and `baseline_share` are still the true measured values.
+   */
+  baseline_known: boolean;
   contribution: number;
   // Affinity to each `GenomeResult.bases` entry, same length/order as `bases`,
   // summing to 1.0 - or [] when it can't be honestly computed (common before

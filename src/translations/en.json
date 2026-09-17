@@ -2668,7 +2668,9 @@
         "waltz": "Instrumental dance music in triple meter",
         "wellness": "Instrumental audio intended for relaxation and mindfulness",
         "metal": "Distorted, guitar-heavy rock with amplified aggression"
-      }
+      },
+      "status_unmeasured": "No baseline",
+      "legend_unmeasured": "No baseline — the reference profile is built from the world's most-played artists, so quieter genres are absent from it entirely. Your listening here still counts; there is simply nothing to compare it against."
     },
     "eclecticism": "Eclecticism",
     "eclecticism_tooltip": "The effective number of genres in your listening — the count you would have if your play time were spread evenly across that many. A library dominated by one genre scores near 1 however many genres it technically contains.",

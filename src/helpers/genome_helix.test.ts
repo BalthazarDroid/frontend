@@ -25,6 +25,7 @@ function genre(
     share,
     baseline_share: 0.01,
     ratio,
+    baseline_known: true,
     contribution,
     base_mix: [],
   };

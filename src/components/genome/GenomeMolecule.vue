@@ -198,6 +198,7 @@
                         'overexpressed',
                         'stable',
                         'underexpressed',
+                        'unmeasured',
                       ] as ExpressionStatus[]"
                       :key="key"
                       class="genome-legend__row"
@@ -208,7 +209,7 @@
                       ></span>
                       <span>{{
                         $t(
-                          `listening_genome.molecule.legend_${key === "overexpressed" ? "over" : key === "stable" ? "stable" : "under"}`,
+                          `listening_genome.molecule.legend_${LEGEND_KEY[key]}`,
                         )
                       }}</span>
                     </p>
@@ -873,7 +874,7 @@ const hudInfo = computed<HudInfo | null>(() => {
     mix,
     mixLabels: bases.value.map((b) => b.label),
     mixKnown: mix.length > 0,
-    status: statusForRatio(genre.ratio),
+    status: statusForRatio(genre.ratio, genre.baseline_known),
     anchor: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
   };
 });
@@ -926,7 +927,22 @@ const STATUS_COLORS: Record<
     bg: "rgba(95,168,232,.10)",
     bd: "rgba(95,168,232,.42)",
   },
+  // Deliberately grey. The other three are readings; this one is the absence of a reading,
+  // and giving it a colour of its own would put it on the same footing as them.
+  unmeasured: {
+    c: "#8b9099",
+    bg: "rgba(139,144,153,.10)",
+    bd: "rgba(139,144,153,.38)",
+  },
 };
+/** Status key to the suffix of its translation key. */
+const LEGEND_KEY: Record<ExpressionStatus, string> = {
+  overexpressed: "over",
+  stable: "stable",
+  underexpressed: "under",
+  unmeasured: "unmeasured",
+};
+
 function statusStyle(status: ExpressionStatus) {
   return STATUS_COLORS[status];
 }
@@ -939,7 +955,7 @@ function rungAriaLabel(genre: GenreShare | null): string {
   return $t("listening_genome.molecule.rung_aria", {
     label: genre.label,
     percent: formatPercent(genre.share),
-    status: statusLabel(statusForRatio(genre.ratio)),
+    status: statusLabel(statusForRatio(genre.ratio, genre.baseline_known)),
   });
 }
 const legAriaLabel = computed(() =>

@@ -19,6 +19,7 @@ function genre(overrides: Partial<GenreShare> = {}): GenreShare {
     share: 0.2,
     baseline_share: 0.02,
     ratio: 10,
+    baseline_known: true,
     contribution: 0.4,
     base_mix: [],
     ...overrides,
@@ -178,5 +179,36 @@ describe("secondaryCode", () => {
   it("formats a zero-padded rank", () => {
     expect(secondaryCode(0)).toBe("GEN-01");
     expect(secondaryCode(25)).toBe("GEN-26");
+  });
+});
+
+describe("statusForRatio with no baseline", () => {
+  /**
+   * The regression this state exists for.
+   *
+   * Twenty of the fifty-nine genres have no baseline at all, because the reference profile is
+   * built from the world's most-played artists and quieter genres never appear in it. Such a
+   * genre arrives with ratio 0, which without this case rendered as UNDEREXPRESSED - telling a
+   * household that plays a great deal of ambient that they play less of it than average.
+   */
+  it("reports unmeasured rather than underexpressed", () => {
+    expect(statusForRatio(0, false)).toBe("unmeasured");
+  });
+
+  it("ignores the ratio entirely when there is no baseline", () => {
+    for (const ratio of [0, 0.5, 1, 5, 99]) {
+      expect(statusForRatio(ratio, false)).toBe("unmeasured");
+    }
+  });
+
+  it("still reads a genre the baseline does know", () => {
+    expect(statusForRatio(2.5, true)).toBe("overexpressed");
+    expect(statusForRatio(1, true)).toBe("stable");
+    expect(statusForRatio(0.2, true)).toBe("underexpressed");
+  });
+
+  /** Defaulting to "known" keeps every existing caller behaving as it did. */
+  it("treats an omitted flag as measured", () => {
+    expect(statusForRatio(2.5)).toBe("overexpressed");
   });
 });
