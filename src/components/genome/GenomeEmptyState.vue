@@ -1,5 +1,5 @@
 <template>
-  <Empty class="genome-panel-frame border">
+  <Empty class="genome-panel-frame rounded-lg border">
     <EmptyHeader>
       <EmptyMedia variant="icon">
         <Dna class="size-6" />

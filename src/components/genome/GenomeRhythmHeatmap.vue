@@ -1,5 +1,5 @@
 <template>
-  <Card class="genome-panel-frame bg-transparent">
+  <Card class="genome-panel-frame rounded-lg bg-transparent">
     <CardHeader>
       <CardTitle>{{ $t("listening_genome.rhythm") }}</CardTitle>
     </CardHeader>

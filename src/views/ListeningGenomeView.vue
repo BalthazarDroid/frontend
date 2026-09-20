@@ -58,7 +58,7 @@
       <Alert
         v-if="showResolvingNotice(genome.stats)"
         variant="default"
-        class="genome-panel-frame"
+        class="genome-panel-frame rounded-lg"
       >
         <Loader2 class="size-4 animate-spin" />
         <AlertTitle>{{ $t("listening_genome.enriching_title") }}</AlertTitle>
@@ -75,7 +75,7 @@
       <Alert
         v-else-if="showUnresolvedNotice(genome.stats)"
         variant="default"
-        class="genome-panel-frame"
+        class="genome-panel-frame rounded-lg"
       >
         <TriangleAlert class="size-4" />
         <AlertTitle>{{ $t("listening_genome.unresolved_title") }}</AlertTitle>

@@ -1,7 +1,7 @@
 <template>
   <div class="genome-tiles">
     <Card
-      class="genome-panel-frame genome-tile-card gap-0 bg-transparent py-0"
+      class="genome-panel-frame rounded-lg genome-tile-card gap-0 bg-transparent py-0"
       :class="{ 'opacity-60': obscurity.known_share < 0.5 }"
     >
       <CardContent class="genome-tile">
@@ -35,7 +35,9 @@
       </CardContent>
     </Card>
 
-    <Card class="genome-panel-frame genome-tile-card gap-0 bg-transparent py-0">
+    <Card
+      class="genome-panel-frame rounded-lg genome-tile-card gap-0 bg-transparent py-0"
+    >
       <CardContent class="genome-tile">
         <GeneGlyph :hue="BASE_HUES[3]" :intensity="glyphIntensity[1]" />
         <div class="genome-tile__body">
@@ -65,7 +67,9 @@
       </CardContent>
     </Card>
 
-    <Card class="genome-panel-frame genome-tile-card gap-0 bg-transparent py-0">
+    <Card
+      class="genome-panel-frame rounded-lg genome-tile-card gap-0 bg-transparent py-0"
+    >
       <CardContent class="genome-tile">
         <GeneGlyph :hue="BASE_HUES[1]" :intensity="glyphIntensity[2]" />
         <div class="genome-tile__body">

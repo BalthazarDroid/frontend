@@ -1,5 +1,5 @@
 <template>
-  <Card class="genome-panel-frame genome-discovery bg-transparent">
+  <Card class="genome-panel-frame rounded-lg genome-discovery bg-transparent">
     <CardHeader>
       <CardTitle>{{ $t("listening_genome.discovery.title") }}</CardTitle>
       <Button

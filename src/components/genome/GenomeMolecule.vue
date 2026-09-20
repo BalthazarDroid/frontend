@@ -1,5 +1,5 @@
 <template>
-  <Card class="genome-panel-frame overflow-hidden bg-transparent">
+  <Card class="genome-panel-frame rounded-lg overflow-hidden bg-transparent">
     <CardHeader>
       <CardTitle>
         {{ $t("listening_genome.molecule.title") }}

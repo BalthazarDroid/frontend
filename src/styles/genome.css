@@ -70,7 +70,7 @@
      holes cut in it. One accent, used sparingly: a live edge on whatever is being touched. */
   --genome-accent: hsl(190 85% 62%);
   --genome-panel-bg: hsl(215 40% 60% / 0.05);
-  --genome-panel-border: hsl(205 60% 68% / 0.22);
+  --genome-panel-border: hsl(200 65% 70% / 0.3);
   /* The corner ticks are the page's one piece of pure accent, and at 0.6 against a panel
      this dark they barely registered. */
   --genome-tick: hsl(190 90% 66% / 0.95);
@@ -136,12 +136,15 @@
 .genome-page .genome-panel-frame::after {
   content: "";
   position: absolute;
-  width: 26px;
-  height: 26px;
+  width: 18px;
+  height: 18px;
   pointer-events: none;
   border-color: var(--genome-tick);
   border-style: solid;
   border-radius: inherit;
+  /* A faint bloom of the same colour. The bracket is one hairline on a dark panel; without
+     this it reads as drawn, and with it as lit, which is the whole point of an accent. */
+  filter: drop-shadow(0 0 3px hsl(190 90% 60% / 0.55));
 }
 /* `inherit` brings the radius of all FOUR corners, which curls the far end of each leg back
    in and closes the bracket into a semicircle. Only the corner being marked keeps the
