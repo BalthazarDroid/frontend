@@ -2556,7 +2556,7 @@
       "title": "Listening Genome",
       "import_hub_description": "Import your Last.fm scrobble history or an Apple Music export.",
       "import_apple": "Import Apple Music export",
-      "import_apple_hint": "Upload the Apple Music Play Activity.csv file from your privacy.apple.com data export.",
+      "import_apple_hint": "From your privacy.apple.com export, upload Apple Music - Play History Daily Tracks.csv. It is the only file in the export that names the artist.",
       "import_lastfm": "Import Last.fm history",
       "import_lastfm_hint": "Pull your public scrobble history from Last.fm.",
       "lastfm_username": "Last.fm username",
