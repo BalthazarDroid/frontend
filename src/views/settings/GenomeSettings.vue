@@ -231,11 +231,16 @@ function errorMessage(err: unknown): string {
 }
 
 function summarizeImport(result: GenomeImportResult): string {
-  return $t("listening_genome.settings.import_result_detail", {
+  const counts = $t("listening_genome.settings.import_result_detail", {
     imported: result.rows_imported,
     skipped: result.rows_skipped,
     duplicate: result.rows_duplicate,
   });
+  // The warnings are the only part that says WHY, and they were shown as toasts alone - which
+  // is a message that has already gone by the time anyone reads the counts and wonders. The
+  // summary line persists, so the explanation belongs there as well.
+  if (result.warnings.length === 0) return counts;
+  return `${counts} ${result.warnings.join(" ")}`;
 }
 
 function reportImport(
