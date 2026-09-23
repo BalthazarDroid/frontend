@@ -113,11 +113,38 @@
         </p>
       </CardContent>
     </Card>
+
+    <!-- TEMPORARY. Exists so the listening history survives the move to the standalone
+         Home Assistant integration; remove it once that migration is done. It lives here
+         rather than only in the core config editor because this is the page anyone looking
+         for their genome data actually opens. -->
+    <Card>
+      <CardHeader>
+        <CardTitle>{{
+          $t("listening_genome.settings.export_title")
+        }}</CardTitle>
+        <CardDescription>
+          {{ $t("listening_genome.settings.export_hint") }}
+        </CardDescription>
+      </CardHeader>
+      <CardContent class="flex flex-col gap-3">
+        <div>
+          <Button variant="outline" :disabled="exportBusy" @click="exportDb">
+            <Loader2 v-if="exportBusy" class="mr-2 size-4 animate-spin" />
+            {{ $t("listening_genome.settings.export_action") }}
+          </Button>
+        </div>
+        <FieldError v-if="exportError">{{ exportError }}</FieldError>
+        <p v-if="exportSummary" class="text-sm text-muted-foreground">
+          {{ exportSummary }}
+        </p>
+      </CardContent>
+    </Card>
   </div>
 </template>
 
 <script setup lang="ts">
-import { CircleCheck, TriangleAlert } from "@lucide/vue";
+import { CircleCheck, Loader2, TriangleAlert } from "@lucide/vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -302,6 +329,39 @@ async function onFilePicked(event: Event): Promise<void> {
   target.value = "";
   if (!file) return;
   await importAppleFile(file);
+}
+
+interface GenomeExportResult {
+  path: string;
+  bytes: number;
+  listens: number;
+}
+
+const exportBusy = ref(false);
+const exportError = ref("");
+const exportSummary = ref("");
+
+async function exportDb(): Promise<void> {
+  exportBusy.value = true;
+  exportError.value = "";
+  exportSummary.value = "";
+  try {
+    const result = await api.sendCommand<GenomeExportResult>(
+      "genome/export_db",
+      {},
+      { suppressGlobalError: true },
+    );
+    // The path is the whole point of the message: a backup nobody can find is not a backup.
+    exportSummary.value = $t("listening_genome.settings.export_result", {
+      listens: result.listens,
+      path: result.path,
+    });
+  } catch (err) {
+    exportError.value = errorMessage(err);
+    toast.error(exportError.value);
+  } finally {
+    exportBusy.value = false;
+  }
 }
 
 async function importAppleFile(file: File): Promise<void> {
