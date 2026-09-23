@@ -234,3 +234,27 @@ export interface DiscoveryResult {
   suggested_state: "ready" | "pending" | "unavailable";
   generated_at: number | null;
 }
+
+/** Name of a long-running genome job, as keyed in the `genome/jobs` map. */
+export type GenomeJobName = "lastfm_import" | "apple_import" | "export_db";
+
+/**
+ * Snapshot of one long-running job, as returned by `genome/jobs` (and by the
+ * `genome/export_db` / `genome/import_lastfm` dispatch commands, which return
+ * the freshly-started job rather than a result).
+ *
+ * `message` is already written for a person to read - the UI never assembles it.
+ * `progress` is 0-100, or null for indeterminate (no known total), which is the
+ * normal state while a job runs.
+ */
+export interface GenomeJob {
+  job: string;
+  state: "idle" | "running" | "ok" | "error";
+  message: string;
+  started_at: number | null;
+  finished_at: number | null;
+  progress: number | null;
+}
+
+/** The `genome/jobs` payload. Always carries every `GenomeJobName` key. */
+export type GenomeJobs = Record<GenomeJobName, GenomeJob>;
