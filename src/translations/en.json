@@ -2558,7 +2558,7 @@
       "import_apple": "Import Apple Music export",
       "import_apple_hint": "From your privacy.apple.com export, upload Apple Music - Play History Daily Tracks.csv. It is the only file in the export that names the artist.",
       "export_title": "Export genome database",
-      "export_hint": "Write a copy of the genome database to /share, where the file editor and Samba can reach it. Temporary, for moving this data to the standalone Home Assistant integration.",
+      "export_hint": "Write a copy of the genome database to the first shared folder this app can reach (usually /media), where the file editor and Samba can pick it up. Temporary, for moving this data to the standalone Home Assistant integration.",
       "export_action": "Export database",
       "export_result": "Exported {listens} listens to {path}",
       "import_lastfm": "Import Last.fm history",
